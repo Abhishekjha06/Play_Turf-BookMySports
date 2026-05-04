@@ -1,0 +1,152 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* play_Turf design system — DARK ONLY. All colors HSL. */
+
+@layer base {
+  :root {
+    /* Core palette */
+    --background: 0 0% 2%;            /* #050505 */
+    --foreground: 0 0% 100%;
+    --foreground-soft: 0 0% 70%;
+    --foreground-muted: 0 0% 55%;
+
+    --panel: 0 0% 7%;                 /* #121212 */
+    --panel-2: 0 0% 10%;              /* #1A1A1A */
+    --panel-3: 0 0% 13%;
+
+    --card: 0 0% 7%;
+    --card-foreground: 0 0% 100%;
+
+    --popover: 0 0% 7%;
+    --popover-foreground: 0 0% 100%;
+
+    /* Neon green accent */
+    --primary: 73 95% 51%;            /* #C6F806 */
+    --primary-foreground: 0 0% 4%;
+    --primary-glow: 73 95% 51%;
+
+    --secondary: 0 0% 13%;
+    --secondary-foreground: 0 0% 100%;
+
+    --muted: 0 0% 10%;
+    --muted-foreground: 0 0% 60%;
+
+    --accent: 73 95% 51%;
+    --accent-foreground: 0 0% 4%;
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+
+    --success: 142 71% 45%;
+    --warning: 38 92% 55%;
+
+    --border: 0 0% 15%;
+    --input: 0 0% 13%;
+    --ring: 73 95% 51%;
+
+    --radius: 1rem;
+
+    /* Gradients */
+    --gradient-bg: radial-gradient(1200px 600px at 50% -10%, hsl(73 95% 51% / 0.10), transparent 60%),
+                   radial-gradient(800px 400px at 0% 100%, hsl(73 95% 51% / 0.06), transparent 60%),
+                   hsl(var(--background));
+    --gradient-card: linear-gradient(180deg, hsl(0 0% 9%), hsl(0 0% 6%));
+    --gradient-neon: linear-gradient(135deg, hsl(73 95% 51%), hsl(85 95% 55%));
+    --gradient-overlay: linear-gradient(180deg, transparent 0%, hsl(0 0% 0% / 0.2) 40%, hsl(0 0% 0% / 0.92) 100%);
+
+    /* Shadows */
+    --shadow-neon: 0 0 22px hsl(73 95% 51% / 0.5);
+    --shadow-neon-lg: 0 0 40px hsl(73 95% 51% / 0.55), 0 0 12px hsl(73 95% 51% / 0.4);
+    --shadow-card: 0 8px 30px hsl(0 0% 0% / 0.6);
+
+    /* Sidebar (unused but kept) */
+    --sidebar-background: 0 0% 4%;
+    --sidebar-foreground: 0 0% 95%;
+    --sidebar-primary: 73 95% 51%;
+    --sidebar-primary-foreground: 0 0% 4%;
+    --sidebar-accent: 0 0% 10%;
+    --sidebar-accent-foreground: 0 0% 95%;
+    --sidebar-border: 0 0% 15%;
+    --sidebar-ring: 73 95% 51%;
+  }
+
+  /* Force dark always */
+  html { color-scheme: dark; }
+}
+
+@layer base {
+  * { @apply border-border; }
+
+  html, body, #root { @apply h-full; }
+
+  body {
+    @apply text-foreground antialiased;
+    background: var(--gradient-bg);
+    background-attachment: fixed;
+    font-family: 'Outfit', system-ui, sans-serif;
+    font-feature-settings: 'ss01', 'cv11';
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  /* Hide scrollbars on horizontal scrollers */
+  .no-scrollbar::-webkit-scrollbar { display: none; }
+  .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+}
+
+@layer components {
+  .glass {
+    @apply backdrop-blur-xl;
+    background: hsl(0 0% 4% / 0.72);
+    border: 1px solid hsl(0 0% 100% / 0.06);
+  }
+  .glass-strong {
+    @apply backdrop-blur-2xl;
+    background: hsl(0 0% 6% / 0.85);
+    border: 1px solid hsl(0 0% 100% / 0.08);
+  }
+  .neon-text {
+    color: hsl(var(--primary));
+    text-shadow: 0 0 18px hsl(var(--primary) / 0.55);
+  }
+  .neon-ring {
+    box-shadow: var(--shadow-neon);
+  }
+  .neon-ring-lg {
+    box-shadow: var(--shadow-neon-lg);
+  }
+  .card-panel {
+    background: var(--gradient-card);
+    border: 1px solid hsl(0 0% 100% / 0.05);
+  }
+  .pressable {
+    @apply transition-transform duration-150 active:scale-[0.97];
+  }
+
+  .stadium-grid {
+    background-image:
+      linear-gradient(rgba(34, 211, 238, 0.08) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(168, 85, 247, 0.08) 1px, transparent 1px);
+    background-size: 42px 42px;
+    mask-image: linear-gradient(to bottom, transparent, black 18%, transparent 88%);
+  }
+}
+
+@layer utilities {
+  .text-soft { color: hsl(var(--foreground-soft)); }
+  .text-muted2 { color: hsl(var(--foreground-muted)); }
+  .bg-panel { background-color: hsl(var(--panel)); }
+  .bg-panel-2 { background-color: hsl(var(--panel-2)); }
+  .bg-panel-3 { background-color: hsl(var(--panel-3)); }
+}
+
+@keyframes confetti {
+  0% { transform: translateY(-10vh) rotate(0deg); opacity: 0; }
+  12% { opacity: 1; }
+  100% { transform: translateY(110vh) rotate(720deg); opacity: 0; }
+}
+
+.animate-confetti {
+  animation: confetti 3.2s ease-in infinite;
+}
