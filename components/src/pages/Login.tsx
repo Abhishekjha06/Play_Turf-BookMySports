@@ -1,8 +1,8 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { MobileShell } from "@/components/layout/MobileShell";
 import { BackButton } from "@/components/layout/BackButton";
-import { signInAdmin, signInMock } from "@/lib/auth";
+import { signInAdmin, signInMock, getRemainingAttempts, getTimeUntilUnlocked } from "@/lib/auth";
 import { isMockMode } from "@/lib/api";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
@@ -13,6 +13,28 @@ const Login = () => {
   const [adminEmail, setAdminEmail] = useState("");
   const [adminPassword, setAdminPassword] = useState("");
   const [adminLoading, setAdminLoading] = useState(false);
+  const [remainingAttempts, setRemainingAttempts] = useState(2);
+  const [timeUntilUnlock, setTimeUntilUnlock] = useState(0);
+
+  // Update attempt counter when email changes
+  useEffect(() => {
+    setRemainingAttempts(getRemainingAttempts(adminEmail));
+    setTimeUntilUnlock(getTimeUntilUnlocked(adminEmail));
+  }, [adminEmail]);
+
+  // Timer for lockout countdown
+  useEffect(() => {
+    if (timeUntilUnlock <= 0) return;
+
+    const interval = setInterval(() => {
+      setTimeUntilUnlock((prev) => {
+        const next = prev - 1000;
+        return next <= 0 ? 0 : next;
+      });
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [timeUntilUnlock]);
 
   const handleGoogle = async () => {
     if (!isMockMode) {
@@ -33,6 +55,9 @@ const Login = () => {
       toast.success("Signed in as admin");
       navigate("/admin");
     } catch (e) {
+      // Update attempt counter on error
+      setRemainingAttempts(getRemainingAttempts(adminEmail));
+      setTimeUntilUnlock(getTimeUntilUnlocked(adminEmail));
       toast.error((e as Error).message);
     } finally {
       setAdminLoading(false);
@@ -88,13 +113,32 @@ const Login = () => {
                 placeholder="Password"
                 data-testid="admin-password"
               />
+              {remainingAttempts === 0 ? (
+                <div className="mt-3 p-3 rounded-2xl bg-red-500/20 border border-red-500/50">
+                  <p className="text-xs font-semibold text-red-400">
+                    Account locked for {Math.ceil(timeUntilUnlock / 1000)} seconds
+                  </p>
+                </div>
+              ) : remainingAttempts === 1 ? (
+                <div className="mt-3 p-3 rounded-2xl bg-yellow-500/20 border border-yellow-500/50">
+                  <p className="text-xs font-semibold text-yellow-400">
+                    ⚠️ 1 attempt remaining before lockout
+                  </p>
+                </div>
+              ) : remainingAttempts === 2 ? null : (
+                <div className="mt-3 p-3 rounded-2xl bg-blue-500/20 border border-blue-500/50">
+                  <p className="text-xs font-semibold text-blue-400">
+                    {remainingAttempts} attempts remaining
+                  </p>
+                </div>
+              )}
               <button
                 onClick={handleAdmin}
-                disabled={adminLoading}
+                disabled={adminLoading || remainingAttempts === 0}
                 className="mt-3 w-full bg-panel-2 border border-white/10 text-soft font-semibold rounded-full py-3 text-sm pressable disabled:opacity-50"
                 data-testid="admin-signin"
               >
-                {adminLoading ? "Checking..." : "Admin Login"}
+                {adminLoading ? "Checking..." : remainingAttempts === 0 ? `Locked (${Math.ceil(timeUntilUnlock / 1000)}s)` : "Admin Login"}
               </button>
             </div>
           )}
@@ -111,10 +155,10 @@ const Login = () => {
 function GoogleG() {
   return (
     <svg width="18" height="18" viewBox="0 0 48 48" aria-hidden>
-      <path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.7 32.6 29.3 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3 0 5.7 1.1 7.8 3l5.7-5.7C33.9 5.7 29.2 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.2-.1-2.4-.4-3.5z"/>
-      <path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.6 16 18.9 12 24 12c3 0 5.7 1.1 7.8 3l5.7-5.7C33.9 5.7 29.2 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"/>
-      <path fill="#4CAF50" d="M24 44c5.1 0 9.7-1.7 13.3-4.7l-6.1-5.2C29 35.4 26.6 36 24 36c-5.3 0-9.6-3.3-11.3-8l-6.5 5C9.5 39.5 16.2 44 24 44z"/>
-      <path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.2-2.2 4.1-4 5.5l6.1 5.2C40.8 35 44 29.9 44 24c0-1.2-.1-2.4-.4-3.5z"/>
+      <path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.7 32.6 29.3 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3 0 5.7 1.1 7.8 3l5.7-5.7C33.9 5.7 29.2 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.2-.1-2.4-.4-3.5z" />
+      <path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.6 16 18.9 12 24 12c3 0 5.7 1.1 7.8 3l5.7-5.7C33.9 5.7 29.2 4 24 4 16.3 4 9.7 8.3 6.3 14.7z" />
+      <path fill="#4CAF50" d="M24 44c5.1 0 9.7-1.7 13.3-4.7l-6.1-5.2C29 35.4 26.6 36 24 36c-5.3 0-9.6-3.3-11.3-8l-6.5 5C9.5 39.5 16.2 44 24 44z" />
+      <path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.2-2.2 4.1-4 5.5l6.1 5.2C40.8 35 44 29.9 44 24c0-1.2-.1-2.4-.4-3.5z" />
     </svg>
   );
 }

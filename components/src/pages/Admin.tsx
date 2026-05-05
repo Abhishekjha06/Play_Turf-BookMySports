@@ -1,6 +1,6 @@
 import { ChangeEvent, useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Download, Plus, Save, Trash2, Upload } from "lucide-react";
+import { Download, Plus, Save, Trash2, Upload, Lock, Unlock } from "lucide-react";
 import { toast } from "sonner";
 import { MobileShell } from "@/components/layout/MobileShell";
 import { BackButton } from "@/components/layout/BackButton";
@@ -8,9 +8,10 @@ import { useAuth } from "@/hooks/use-auth";
 import { api } from "@/lib/api";
 import type { Banner, Booking, Offer, Tournament, Turf } from "@/data/seed";
 import { cn } from "@/lib/utils";
+import { getLockedAccounts, resetLockout, getTimeUntilUnlocked, formatTimeRemaining } from "@/lib/admin-attempt-tracker";
 
-type Tab = "dashboard" | "turfs" | "banners" | "offers" | "tournaments" | "bookings";
-const tabs: Tab[] = ["dashboard", "turfs", "banners", "offers", "tournaments", "bookings"];
+type Tab = "dashboard" | "turfs" | "banners" | "offers" | "tournaments" | "bookings" | "security";
+const tabs: Tab[] = ["dashboard", "turfs", "banners", "offers", "tournaments", "bookings", "security"];
 
 const splitList = (value: string) => value.split(/[,\n]/).map((item) => item.trim()).filter(Boolean);
 const joinList = (value?: string[]) => (value || []).join(", ");
@@ -27,6 +28,7 @@ const Admin = () => {
   const [offers, setOffers] = useState<Offer[]>([]);
   const [tournaments, setTournaments] = useState<Tournament[]>([]);
   const [bookings, setBookings] = useState<Booking[]>([]);
+  const [lockedAccounts, setLockedAccounts] = useState<string[]>([]);
 
   useEffect(() => {
     if (!loading && (!user || !user.is_admin)) navigate("/");
@@ -50,6 +52,13 @@ const Admin = () => {
   useEffect(() => {
     void refresh();
   }, []);
+
+  // Update locked accounts when security tab is opened
+  useEffect(() => {
+    if (tab === "security") {
+      setLockedAccounts(getLockedAccounts());
+    }
+  }, [tab]);
 
   const addTurf = async () => {
     const turf = await api.admin.addTurf({
@@ -206,6 +215,51 @@ const Admin = () => {
               </div>
             ))}
           </>
+        )}
+
+        {tab === "security" && (
+          <div className="space-y-4">
+            <div className="rounded-2xl bg-panel-2/80 border border-white/10 p-4">
+              <h3 className="text-sm font-semibold mb-3 flex items-center gap-2">
+                <Lock className="w-4 h-4" />
+                Admin Account Protection
+              </h3>
+              <p className="text-xs text-muted2 mb-4">
+                Admin accounts are protected with 2-attempt password limit. After 2 failed attempts, the account locks for 5 minutes.
+              </p>
+            </div>
+
+            {lockedAccounts.length === 0 ? (
+              <div className="text-center py-8">
+                <Unlock className="w-6 h-6 mx-auto mb-2 text-green-400" />
+                <p className="text-sm text-muted2">No locked accounts</p>
+              </div>
+            ) : (
+              <div className="space-y-2">
+                <p className="text-xs font-semibold uppercase tracking-[0.22em] text-muted2">Locked Accounts ({lockedAccounts.length})</p>
+                {lockedAccounts.map((email) => (
+                  <div key={email} className="flex items-center justify-between gap-3 rounded-xl bg-red-500/10 border border-red-500/30 p-3">
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm font-semibold text-red-400 truncate">{email}</p>
+                      <p className="text-xs text-muted2">
+                        Unlocks in {Math.ceil(getTimeUntilUnlocked(email) / 1000)} seconds
+                      </p>
+                    </div>
+                    <button
+                      onClick={() => {
+                        resetLockout(email);
+                        setLockedAccounts(getLockedAccounts());
+                        toast.success(`${email} unlocked`);
+                      }}
+                      className="shrink-0 px-3 py-2 bg-red-500/20 border border-red-500/50 rounded-lg text-xs font-semibold text-red-400 hover:bg-red-500/30 pressable"
+                    >
+                      Unlock
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
         )}
       </div>
     </MobileShell>

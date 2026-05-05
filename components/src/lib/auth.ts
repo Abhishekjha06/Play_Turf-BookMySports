@@ -1,5 +1,14 @@
 import { api } from "@/lib/api";
 import type { User } from "@/data/seed";
+import {
+  isLocked,
+  trackFailedAttempt,
+  clearAttempts,
+  getRemainingAttempts,
+  getTimeUntilUnlocked,
+  formatTimeRemaining,
+  resetLockout,
+} from "@/lib/admin-attempt-tracker";
 
 // minimal store using plain event emitter pattern
 type Listener = () => void;
@@ -23,8 +32,39 @@ export async function signInMock(admin = false) {
 }
 
 export async function signInAdmin(email: string, password: string) {
-  _user = await api.adminPasswordSignIn(email, password);
-  emit();
+  // Check if account is locked
+  if (isLocked(email)) {
+    const timeRemaining = getTimeUntilUnlocked(email);
+    throw new Error(
+      `Account locked. Try again in ${formatTimeRemaining(timeRemaining)}`
+    );
+  }
+
+  try {
+    _user = await api.adminPasswordSignIn(email, password);
+    // Clear attempts on successful login
+    clearAttempts(email);
+    emit();
+  } catch (error) {
+    // Track failed attempt
+    trackFailedAttempt(email);
+    const remaining = getRemainingAttempts(email);
+
+    if (remaining === 0) {
+      const timeRemaining = getTimeUntilUnlocked(email);
+      throw new Error(
+        `Invalid password. Account locked for ${formatTimeRemaining(timeRemaining)}`
+      );
+    } else if (remaining === 1) {
+      throw new Error(
+        `Invalid password. 1 attempt remaining before lockout`
+      );
+    } else {
+      throw new Error(
+        `Invalid password. ${remaining} attempts remaining`
+      );
+    }
+  }
 }
 
 export async function signOut() {
@@ -37,3 +77,6 @@ export function subscribe(l: Listener): () => void {
   listeners.add(l);
   return () => listeners.delete(l);
 }
+
+// Export attempt tracking functions for use in components
+export { getRemainingAttempts, getTimeUntilUnlocked, resetLockout } from "@/lib/admin-attempt-tracker";
