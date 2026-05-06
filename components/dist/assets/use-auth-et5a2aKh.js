@@ -1,0 +1,1 @@
+import{r as e}from"./index-BAd9LVT6.js";import{e as u,f as o,i as a,h as n}from"./auth-C4l1Pgb1.js";let s=!1;function d(){const[,r]=e.useState(0);return e.useEffect(()=>{const t=u(()=>r(i=>i+1));return s||(s=!0,o()),()=>{t()}},[]),{user:n(),loading:a()}}export{d as u};

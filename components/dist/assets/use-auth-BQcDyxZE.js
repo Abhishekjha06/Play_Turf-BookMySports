@@ -1,1 +1,0 @@
-import{r as s}from"./index-CsScNpCr.js";import{c as u,r as o,i as a,g as n}from"./auth-CXEyiOU-.js";let e=!1;function d(){const[,r]=s.useState(0);return s.useEffect(()=>{const t=u(()=>r(i=>i+1));return e||(e=!0,o()),()=>{t()}},[]),{user:n(),loading:a()}}export{d as u};

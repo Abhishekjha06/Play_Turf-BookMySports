@@ -253,8 +253,7 @@ const BookingContent = () => {
                 </div>
 
                 <div className="mt-5">
-                  <label className="text-[11px] font-bold uppercase tracking-[0.18em] text-cyan-100/70">Bet / Booking Amount</label>
-                  <div className="mt-2 flex rounded-2xl border border-white/10 bg-white/[0.06] p-2">
+                  <div className="flex rounded-2xl border border-white/10 bg-white/[0.06] p-2">
                     <span className="grid w-10 place-items-center text-sm font-black text-lime-200">Rs</span>
                     <input
                       type="number"
