@@ -15,6 +15,11 @@ const Login = lazy(() => import("@/pages/Login"));
 const More = lazy(() => import("@/pages/More"));
 const Admin = lazy(() => import("@/pages/Admin"));
 const Receipt = lazy(() => import("@/pages/Receipt"));
+const ClientLogin = lazy(() => import("@/pages/ClientLogin"));
+const ClientDashboard = lazy(() => import("@/pages/ClientDashboard"));
+const ClientSlotManagement = lazy(() => import("@/pages/ClientSlotManagement"));
+const ClientBookingManagement = lazy(() => import("@/pages/ClientBookingManagement"));
+const ClientProfileSettings = lazy(() => import("@/pages/ClientProfileSettings"));
 const NotFound = lazy(() => import("@/pages/NotFound"));
 
 const queryClient = new QueryClient();
@@ -37,6 +42,11 @@ const App = () => (
               <Route path="/more" element={<More />} />
               <Route path="/admin" element={<Admin />} />
               <Route path="/receipt" element={<Receipt />} />
+              <Route path="/client/login" element={<ClientLogin />} />
+              <Route path="/client/dashboard" element={<ClientDashboard />} />
+              <Route path="/client/slots" element={<ClientSlotManagement />} />
+              <Route path="/client/bookings" element={<ClientBookingManagement />} />
+              <Route path="/client/settings" element={<ClientProfileSettings />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </Suspense>

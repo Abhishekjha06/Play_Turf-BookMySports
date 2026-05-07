@@ -37,3 +37,32 @@ def get_current_user(
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="User no longer exists")
 
     return user
+
+
+async def get_current_user_ws(token: str, db: Session) -> User | None:
+    """
+    Authenticate user from WebSocket token.
+    Returns None if authentication fails (for WebSocket connections).
+    """
+    if not token:
+        return None
+
+    try:
+        payload = decode_token(token)
+    except ValueError:
+        return None
+    
+    if payload.get("type") != "access":
+        return None
+
+    subject = payload.get("sub")
+    if not isinstance(subject, str):
+        return None
+
+    try:
+        user_id = int(subject)
+    except ValueError:
+        return None
+
+    user = db.get(User, user_id)
+    return user

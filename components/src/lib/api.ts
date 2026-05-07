@@ -39,8 +39,8 @@ const LS_TOURNAMENTS = "playturf:tournaments";
 const LS_FAVORITES = "playturf:favorites";
 const LS_REVIEWS = "playturf:reviews";
 const LS_ACCESS_TOKEN = "playturf:access_token";
-const ADMIN_EMAIL = "jabhishek0606@gamil.com";
-const ADMIN_PASSWORD = "9307483082@Aj";
+const ADMIN_EMAIL = "abhishek123@";
+const ADMIN_PASSWORD = "9765075127@Aj";
 
 function lsGet<T>(key: string, fallback: T): T {
   try {
@@ -61,14 +61,14 @@ function uid(prefix: string) {
   return `${prefix}_${Math.random().toString(36).slice(2, 10)}`;
 }
 
-function getMockTurfs(): Turf[]      { return lsGet<Turf[]>(LS_TURFS, seedTurfs); }
-function setMockTurfs(v: Turf[])     { lsSet(LS_TURFS, v); }
-function getMockBanners(): Banner[]  { return lsGet<Banner[]>(LS_BANNERS, seedBanners); }
+function getMockTurfs(): Turf[] { return lsGet<Turf[]>(LS_TURFS, seedTurfs); }
+function setMockTurfs(v: Turf[]) { lsSet(LS_TURFS, v); }
+function getMockBanners(): Banner[] { return lsGet<Banner[]>(LS_BANNERS, seedBanners); }
 function setMockBanners(v: Banner[]) { lsSet(LS_BANNERS, v); }
-function getMockOffers(): Offer[]    { return lsGet<Offer[]>(LS_OFFERS, seedOffers); }
-function setMockOffers(v: Offer[])   { lsSet(LS_OFFERS, v); }
-function getMockTournaments(): Tournament[]    { return lsGet<Tournament[]>(LS_TOURNAMENTS, seedTournaments); }
-function setMockTournaments(v: Tournament[])   { lsSet(LS_TOURNAMENTS, v); }
+function getMockOffers(): Offer[] { return lsGet<Offer[]>(LS_OFFERS, seedOffers); }
+function setMockOffers(v: Offer[]) { lsSet(LS_OFFERS, v); }
+function getMockTournaments(): Tournament[] { return lsGet<Tournament[]>(LS_TOURNAMENTS, seedTournaments); }
+function setMockTournaments(v: Tournament[]) { lsSet(LS_TOURNAMENTS, v); }
 
 function getMockBookings(): Booking[] { return lsGet<Booking[]>(LS_BOOKINGS, []); }
 function setMockBookings(v: Booking[]) { lsSet(LS_BOOKINGS, v); }
@@ -449,13 +449,63 @@ export const api = {
       throw new Error("Invalid admin ID or password");
     }
     const u: User = {
-      user_id: "admin_jabhishek1018",
+      user_id: "admin_abhishek123",
       email: ADMIN_EMAIL,
       name: "Admin",
       picture: "",
       is_admin: true,
     };
     setMockUser(u);
+    return u;
+  },
+  async clientLogin(clientId: string, password: string): Promise<User> {
+    if (!USE_MOCK) {
+      const response = await http<User | (Partial<User> & TokenOut & { user?: Partial<User> })>(
+        "/auth/client/login",
+        { method: "POST", body: JSON.stringify({ client_id: clientId, password }) }
+      );
+      if ("access_token" in response && response.access_token) {
+        setAccessToken(response.access_token);
+        if (response.user) {
+          return normalizeUser(response.user);
+        }
+        const me = await api.me();
+        if (me) return me;
+      }
+      return normalizeUser(response as Partial<User>);
+    }
+    // Mock implementation
+    await delay(250);
+    // Accept test credentials: abhishek1018@ / 123456789
+    if (clientId === "abhishek1018@" && password === "123456789") {
+      const u: User = {
+        user_id: "client_abhishek",
+        email: "abhishek1018@example.com",
+        name: "Abhishek",
+        picture: "",
+        is_admin: false,
+      };
+      setMockUser(u);
+      // Store client-specific token
+      localStorage.setItem("client_token", "mock_client_token_abhishek");
+      localStorage.setItem("client_id", "abhishek1018@");
+      return u;
+    }
+    // Also accept original demo credentials for backward compatibility
+    if (clientId !== "demo_client" || password !== "demo123") {
+      throw new Error("Invalid client ID or password");
+    }
+    const u: User = {
+      user_id: "client_demo",
+      email: "client@playturf.app",
+      name: "Demo Client",
+      picture: "",
+      is_admin: false,
+    };
+    setMockUser(u);
+    // Store client-specific token
+    localStorage.setItem("client_token", "mock_client_token");
+    localStorage.setItem("client_id", clientId);
     return u;
   },
   async logout(): Promise<void> {

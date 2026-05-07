@@ -11,9 +11,11 @@ from app.db.base import Base
 from app.db.models import Turf
 from app.db.session import SessionLocal, engine
 from app.modules.auth.router import router as auth_router
+from app.modules.auth.client_router import router as client_auth_router
 from app.modules.bookings.router import router as bookings_router
 from app.modules.health.router import router as health_router
 from app.modules.turfs.router import router as turfs_router
+from app.modules.realtime.router import router as realtime_router
 
 settings = get_settings()
 setup_logging()
@@ -78,5 +80,7 @@ async def unhandled_exception_handler(_: Request, exc: Exception) -> JSONRespons
 
 app.include_router(health_router, prefix=settings.api_prefix)
 app.include_router(auth_router, prefix=settings.api_prefix)
+app.include_router(client_auth_router, prefix=settings.api_prefix)
 app.include_router(turfs_router, prefix=settings.api_prefix)
 app.include_router(bookings_router, prefix=settings.api_prefix)
+app.include_router(realtime_router, prefix=settings.api_prefix)

@@ -189,53 +189,6 @@ const Login = () => {
             </button>
           )}
 
-          {isMockMode && (
-            <div className="mt-4 rounded-3xl border border-white/10 bg-panel-2/80 p-4 text-left">
-              <p className="text-xs font-semibold uppercase tracking-[0.22em] text-muted2">Admin access</p>
-              <input
-                value={adminEmail}
-                onChange={(event) => setAdminEmail(event.target.value)}
-                className="mt-3 h-12 w-full rounded-2xl border border-white/10 bg-background px-4 text-sm outline-none focus:border-primary"
-                placeholder="Gmail / admin ID"
-                data-testid="admin-email"
-              />
-              <input
-                value={adminPassword}
-                onChange={(event) => setAdminPassword(event.target.value)}
-                type="password"
-                className="mt-2 h-12 w-full rounded-2xl border border-white/10 bg-background px-4 text-sm outline-none focus:border-primary"
-                placeholder="Password"
-                data-testid="admin-password"
-              />
-              {remainingAttempts === 0 ? (
-                <div className="mt-3 p-3 rounded-2xl bg-red-500/20 border border-red-500/50">
-                  <p className="text-xs font-semibold text-red-400">
-                    Account locked for {Math.ceil(timeUntilUnlock / 1000)} seconds
-                  </p>
-                </div>
-              ) : remainingAttempts === 1 ? (
-                <div className="mt-3 p-3 rounded-2xl bg-yellow-500/20 border border-yellow-500/50">
-                  <p className="text-xs font-semibold text-yellow-400">
-                    ⚠️ 1 attempt remaining before lockout
-                  </p>
-                </div>
-              ) : remainingAttempts === 2 ? null : (
-                <div className="mt-3 p-3 rounded-2xl bg-blue-500/20 border border-blue-500/50">
-                  <p className="text-xs font-semibold text-blue-400">
-                    {remainingAttempts} attempts remaining
-                  </p>
-                </div>
-              )}
-              <button
-                onClick={handleAdmin}
-                disabled={adminLoading || remainingAttempts === 0}
-                className="mt-3 w-full bg-panel-2 border border-white/10 text-soft font-semibold rounded-full py-3 text-sm pressable disabled:opacity-50"
-                data-testid="admin-signin"
-              >
-                {adminLoading ? "Checking..." : remainingAttempts === 0 ? `Locked (${Math.ceil(timeUntilUnlock / 1000)}s)` : "Admin Login"}
-              </button>
-            </div>
-          )}
 
           <p className="text-[11px] text-muted2 mt-6">
             By continuing, you agree to our Terms and Privacy Policy.
