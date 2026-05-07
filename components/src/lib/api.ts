@@ -38,8 +38,9 @@ const LS_OFFERS = "playturf:offers";
 const LS_TOURNAMENTS = "playturf:tournaments";
 const LS_FAVORITES = "playturf:favorites";
 const LS_REVIEWS = "playturf:reviews";
-const ADMIN_EMAIL = "jabhishek1018@";
-const ADMIN_PASSWORD = "9765075127@Aj";
+const LS_ACCESS_TOKEN = "playturf:access_token";
+const ADMIN_EMAIL = "jabhishek0606@gamil.com";
+const ADMIN_PASSWORD = "9307483082@Aj";
 
 function lsGet<T>(key: string, fallback: T): T {
   try {
@@ -51,6 +52,9 @@ function lsGet<T>(key: string, fallback: T): T {
 }
 function lsSet<T>(key: string, val: T) {
   try { localStorage.setItem(key, JSON.stringify(val)); } catch { /* noop */ }
+}
+function lsRemove(key: string) {
+  try { localStorage.removeItem(key); } catch { /* noop */ }
 }
 
 function uid(prefix: string) {
@@ -76,16 +80,104 @@ function setMockReviews(v: Review[]) { lsSet(LS_REVIEWS, v); }
 function getMockUser(): User | null { return lsGet<User | null>(LS_USER, null); }
 function setMockUser(u: User | null) { lsSet(LS_USER, u); }
 
+let accessToken = lsGet<string | null>(LS_ACCESS_TOKEN, null);
+let refreshPromise: Promise<string | null> | null = null;
+
+type TokenOut = {
+  access_token: string;
+  token_type?: string;
+};
+type OtpVerifyPayload = {
+  phone: string;
+  otp: string;
+  name?: string;
+  email?: string;
+};
+
+function setAccessToken(token: string | null) {
+  accessToken = token;
+  if (token) {
+    lsSet(LS_ACCESS_TOKEN, token);
+  } else {
+    lsRemove(LS_ACCESS_TOKEN);
+  }
+}
+
+function normalizeUser(raw: Partial<User> & { role?: string; user_id?: string | number }): User {
+  const userId = raw.user_id ?? "";
+  const role = raw.role ?? "";
+  return {
+    user_id: String(userId),
+    email: raw.email ?? "",
+    name: raw.name ?? "Player",
+    picture: raw.picture ?? "",
+    is_admin: raw.is_admin ?? role === "admin",
+  };
+}
+
+async function parseError(res: Response): Promise<string> {
+  const json = await res.json().catch(() => null) as { detail?: string } | null;
+  if (json?.detail) return json.detail;
+  const text = await res.text().catch(() => "");
+  return text || `Request failed: ${res.status}`;
+}
+
+async function refreshAccessToken(): Promise<string | null> {
+  if (refreshPromise) return refreshPromise;
+  refreshPromise = (async () => {
+    const res = await fetch(`${BACKEND_URL}/api/auth/refresh`, {
+      method: "POST",
+      credentials: "include",
+      headers: { "Content-Type": "application/json" },
+    });
+    if (!res.ok) {
+      setAccessToken(null);
+      return null;
+    }
+    const data = (await res.json()) as TokenOut;
+    if (!data.access_token) {
+      setAccessToken(null);
+      return null;
+    }
+    setAccessToken(data.access_token);
+    return data.access_token;
+  })();
+
+  try {
+    return await refreshPromise;
+  } finally {
+    refreshPromise = null;
+  }
+}
+
 // ---------- HTTP helper ----------
-async function http<T>(path: string, init: RequestInit = {}): Promise<T> {
+async function http<T>(path: string, init: RequestInit = {}, retryOnUnauthorized = true): Promise<T> {
+  const headers = new Headers(init.headers);
+  headers.set("Content-Type", "application/json");
+  if (accessToken) {
+    headers.set("Authorization", `Bearer ${accessToken}`);
+  }
+
   const res = await fetch(`${BACKEND_URL}/api${path}`, {
     credentials: "include",
-    headers: { "Content-Type": "application/json", ...(init.headers || {}) },
+    headers,
     ...init,
   });
+  if (
+    !USE_MOCK &&
+    res.status === 401 &&
+    retryOnUnauthorized &&
+    path !== "/auth/refresh" &&
+    path !== "/auth/otp/verify" &&
+    path !== "/auth/otp/request"
+  ) {
+    const nextToken = await refreshAccessToken();
+    if (nextToken) {
+      return http<T>(path, init, false);
+    }
+  }
   if (!res.ok) {
-    const text = await res.text().catch(() => "");
-    throw new Error(text || `Request failed: ${res.status}`);
+    throw new Error(await parseError(res));
   }
   if (res.status === 204) return undefined as T;
   return (await res.json()) as T;
@@ -261,9 +353,40 @@ export const api = {
   },
 
   // ---------- AUTH ----------
+  async requestOtp(phone: string): Promise<void> {
+    if (USE_MOCK) {
+      await delay(180);
+      return;
+    }
+    await http<{ message: string }>("/auth/otp/request", { method: "POST", body: JSON.stringify({ phone }) });
+  },
+  async verifyOtp(payload: OtpVerifyPayload): Promise<User> {
+    if (USE_MOCK) {
+      await delay(200);
+      const u: User = {
+        user_id: uid("user"),
+        email: payload.email || "you@playturf.app",
+        name: payload.name || "Player One",
+        picture: "",
+        is_admin: false,
+      };
+      setMockUser(u);
+      return u;
+    }
+    const token = await http<TokenOut>("/auth/otp/verify", { method: "POST", body: JSON.stringify(payload) });
+    setAccessToken(token.access_token);
+    const me = await api.me();
+    if (!me) throw new Error("Unable to load user profile after OTP verification");
+    return me;
+  },
   async me(): Promise<User | null> {
     if (USE_MOCK) { await delay(80); return getMockUser(); }
-    try { return await http<User>("/auth/me"); } catch { return null; }
+    try {
+      const response = await http<Partial<User> & { role?: string; user_id?: string | number }>("/auth/me");
+      return normalizeUser(response);
+    } catch {
+      return null;
+    }
   },
   async exchangeSession(sessionId: string): Promise<User> {
     if (USE_MOCK) {
@@ -278,7 +401,19 @@ export const api = {
       setMockUser(u);
       return u;
     }
-    return http<User>("/auth/google/session", { method: "POST", body: JSON.stringify({ session_id: sessionId }) });
+    const response = await http<User | (Partial<User> & TokenOut & { user?: Partial<User> })>(
+      "/auth/google/session",
+      { method: "POST", body: JSON.stringify({ session_id: sessionId }) }
+    );
+    if ("access_token" in response && response.access_token) {
+      setAccessToken(response.access_token);
+      if (response.user) {
+        return normalizeUser(response.user);
+      }
+      const me = await api.me();
+      if (me) return me;
+    }
+    return normalizeUser(response as Partial<User>);
   },
   async mockGoogleSignIn(asAdmin = false): Promise<User> {
     // dev helper used by /login when no backend is wired
@@ -295,7 +430,19 @@ export const api = {
   },
   async adminPasswordSignIn(email: string, password: string): Promise<User> {
     if (!USE_MOCK) {
-      return http<User>("/auth/admin-login", { method: "POST", body: JSON.stringify({ email, password }) });
+      const response = await http<User | (Partial<User> & TokenOut & { user?: Partial<User> })>(
+        "/auth/admin-login",
+        { method: "POST", body: JSON.stringify({ email, password }) }
+      );
+      if ("access_token" in response && response.access_token) {
+        setAccessToken(response.access_token);
+        if (response.user) {
+          return normalizeUser(response.user);
+        }
+        const me = await api.me();
+        if (me) return me;
+      }
+      return normalizeUser(response as Partial<User>);
     }
     await delay(250);
     if (email.trim() !== ADMIN_EMAIL || password !== ADMIN_PASSWORD) {
@@ -314,6 +461,7 @@ export const api = {
   async logout(): Promise<void> {
     if (USE_MOCK) { setMockUser(null); return; }
     await http<void>("/auth/logout", { method: "POST" });
+    setAccessToken(null);
   },
 
   // ---------- BOOKINGS ----------
@@ -494,3 +642,8 @@ export const api = {
 };
 
 export const isMockMode = USE_MOCK;
+export const session = {
+  getAccessToken: () => accessToken,
+  setAccessToken,
+  clear: () => setAccessToken(null),
+};

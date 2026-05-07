@@ -31,6 +31,15 @@ export async function signInMock(admin = false) {
   emit();
 }
 
+export async function requestOtp(phone: string) {
+  await api.requestOtp(phone);
+}
+
+export async function signInWithOtp(phone: string, otp: string, name?: string) {
+  _user = await api.verifyOtp({ phone, otp, name });
+  emit();
+}
+
 export async function signInAdmin(email: string, password: string) {
   // Check if account is locked
   if (isLocked(email)) {

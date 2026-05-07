@@ -2,7 +2,14 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { MobileShell } from "@/components/layout/MobileShell";
 import { BackButton } from "@/components/layout/BackButton";
-import { signInAdmin, signInMock, getRemainingAttempts, getTimeUntilUnlocked } from "@/lib/auth";
+import {
+  signInAdmin,
+  signInMock,
+  requestOtp,
+  signInWithOtp,
+  getRemainingAttempts,
+  getTimeUntilUnlocked,
+} from "@/lib/auth";
 import { isMockMode } from "@/lib/api";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
@@ -13,6 +20,11 @@ const Login = () => {
   const [adminEmail, setAdminEmail] = useState("");
   const [adminPassword, setAdminPassword] = useState("");
   const [adminLoading, setAdminLoading] = useState(false);
+  const [phone, setPhone] = useState("");
+  const [name, setName] = useState("");
+  const [otp, setOtp] = useState("");
+  const [otpRequested, setOtpRequested] = useState(false);
+  const [otpLoading, setOtpLoading] = useState(false);
   const [remainingAttempts, setRemainingAttempts] = useState(2);
   const [timeUntilUnlock, setTimeUntilUnlock] = useState(0);
 
@@ -46,6 +58,40 @@ const Login = () => {
     await signInMock(false);
     toast.success("Signed in");
     navigate("/");
+  };
+
+  const handleRequestOtp = async () => {
+    if (!phone.trim()) {
+      toast.error("Enter your phone number");
+      return;
+    }
+    setOtpLoading(true);
+    try {
+      await requestOtp(phone.trim());
+      setOtpRequested(true);
+      toast.success("OTP sent");
+    } catch (e) {
+      toast.error((e as Error).message);
+    } finally {
+      setOtpLoading(false);
+    }
+  };
+
+  const handleVerifyOtp = async () => {
+    if (!otp.trim()) {
+      toast.error("Enter OTP");
+      return;
+    }
+    setOtpLoading(true);
+    try {
+      await signInWithOtp(phone.trim(), otp.trim(), name.trim() || undefined);
+      toast.success("Signed in");
+      navigate("/");
+    } catch (e) {
+      toast.error((e as Error).message);
+    } finally {
+      setOtpLoading(false);
+    }
   };
 
   const handleAdmin = async () => {
@@ -87,13 +133,61 @@ const Login = () => {
           initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}
           className="mt-10 w-full max-w-sm"
         >
-          <button
-            onClick={handleGoogle}
-            className="w-full bg-foreground text-background font-semibold rounded-full py-4 shadow-neon-lg pressable inline-flex items-center justify-center gap-3"
-            data-testid="google-signin"
-          >
-            <GoogleG /> Continue with Google
-          </button>
+          {!isMockMode ? (
+            <div className="rounded-3xl border border-white/10 bg-panel-2/80 p-4 text-left">
+              <p className="text-xs font-semibold uppercase tracking-[0.22em] text-muted2">Sign in with OTP</p>
+              <input
+                value={name}
+                onChange={(event) => setName(event.target.value)}
+                className="mt-3 h-12 w-full rounded-2xl border border-white/10 bg-background px-4 text-sm outline-none focus:border-primary"
+                placeholder="Your name (optional)"
+                data-testid="otp-name"
+              />
+              <input
+                value={phone}
+                onChange={(event) => setPhone(event.target.value)}
+                className="mt-2 h-12 w-full rounded-2xl border border-white/10 bg-background px-4 text-sm outline-none focus:border-primary"
+                placeholder="Phone number"
+                data-testid="otp-phone"
+              />
+              {!otpRequested ? (
+                <button
+                  onClick={handleRequestOtp}
+                  disabled={otpLoading}
+                  className="mt-3 w-full bg-foreground text-background font-semibold rounded-full py-3 text-sm pressable disabled:opacity-50"
+                  data-testid="otp-request"
+                >
+                  {otpLoading ? "Sending OTP..." : "Send OTP"}
+                </button>
+              ) : (
+                <>
+                  <input
+                    value={otp}
+                    onChange={(event) => setOtp(event.target.value)}
+                    className="mt-3 h-12 w-full rounded-2xl border border-white/10 bg-background px-4 text-sm outline-none focus:border-primary"
+                    placeholder="Enter OTP"
+                    data-testid="otp-code"
+                  />
+                  <button
+                    onClick={handleVerifyOtp}
+                    disabled={otpLoading}
+                    className="mt-3 w-full bg-foreground text-background font-semibold rounded-full py-3 text-sm pressable disabled:opacity-50"
+                    data-testid="otp-verify"
+                  >
+                    {otpLoading ? "Verifying..." : "Verify & Sign In"}
+                  </button>
+                </>
+              )}
+            </div>
+          ) : (
+            <button
+              onClick={handleGoogle}
+              className="w-full bg-foreground text-background font-semibold rounded-full py-4 shadow-neon-lg pressable inline-flex items-center justify-center gap-3"
+              data-testid="google-signin"
+            >
+              <GoogleG /> Continue with Google
+            </button>
+          )}
 
           {isMockMode && (
             <div className="mt-4 rounded-3xl border border-white/10 bg-panel-2/80 p-4 text-left">
