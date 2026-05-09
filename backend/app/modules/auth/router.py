@@ -4,7 +4,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.core.config import get_settings
-from app.core.security import create_access_token, create_refresh_token
+from app.core.security import create_access_token, create_refresh_token, verify_password
 from app.db.models import User
 from app.db.session import get_db
 from app.modules.auth.deps import get_current_user
@@ -27,6 +27,20 @@ class OtpVerifyIn(BaseModel):
 class TokenOut(BaseModel):
     access_token: str
     token_type: str = "bearer"
+
+
+class AdminLoginRequest(BaseModel):
+    email: EmailStr
+    password: str
+
+
+class AdminLoginResponse(BaseModel):
+    access_token: str
+    token_type: str = "bearer"
+    user_id: int
+    email: str
+    name: str
+    role: str
 
 
 @router.post("/otp/request", status_code=status.HTTP_202_ACCEPTED)
@@ -71,6 +85,53 @@ def refresh(refresh_token: str | None = Cookie(default=None)) -> TokenOut:
     # Signature/expiry verification will be tightened with token persistence and rotation.
     access_token = create_access_token(subject="user:session", extra_claims={"role": "user"})
     return TokenOut(access_token=access_token)
+
+
+@router.post("/admin-login", response_model=AdminLoginResponse)
+def admin_login(payload: AdminLoginRequest, db: Session = Depends(get_db)) -> AdminLoginResponse:
+    # Find user by email
+    user = db.scalar(
+        select(User).where(
+            User.email == payload.email,
+            User.is_active == True
+        )
+    )
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid email or password",
+        )
+    if not user.password_hash:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Account not configured with password",
+        )
+    if not verify_password(payload.password, user.password_hash):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid email or password",
+        )
+    # Check if user has admin role
+    if user.role != "admin":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="User is not authorized as an admin",
+        )
+
+    # Create JWT token with admin role
+    access_token = create_access_token(
+        subject=str(user.id),
+        extra_claims={"role": user.role, "email": user.email}
+    )
+
+    return AdminLoginResponse(
+        access_token=access_token,
+        token_type="bearer",
+        user_id=user.id,
+        email=user.email or "",
+        name=user.name,
+        role=user.role,
+    )
 
 
 @router.post("/logout", status_code=status.HTTP_204_NO_CONTENT)

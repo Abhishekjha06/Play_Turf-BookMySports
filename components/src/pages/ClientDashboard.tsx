@@ -1,13 +1,13 @@
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { MobileShell } from "@/components/layout/MobileShell";
-import { BackButton } from "@/components/layout/BackButton";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Badge } from "@/components/ui/badge";
-import { Progress } from "@/components/ui/progress";
-import { Calendar } from "@/components/ui/calendar";
+import { MobileShell } from "@/layout/MobileShell";
+import { BackButton } from "@/layout/BackButton";
+import { Button } from "@/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/ui/tabs";
+import { Badge } from "@/ui/badge";
+import { Progress } from "@/ui/progress";
+import { Calendar } from "@/ui/calendar";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
 import {
@@ -28,9 +28,12 @@ import {
     WifiOff,
 } from "lucide-react";
 import { websocket, useWebSocket } from "@/lib/websocket";
+import { useAuth } from "@/hooks/use-auth";
+import { isMockMode } from "@/lib/api";
 
 const ClientDashboard = () => {
     const navigate = useNavigate();
+    const { user } = useAuth();
     const [date, setDate] = useState<Date | undefined>(new Date());
     const [loading, setLoading] = useState(false);
     const [wsConnected, setWsConnected] = useState(false);
@@ -56,26 +59,41 @@ const ClientDashboard = () => {
         { id: 4, customer: "Neha Singh", time: "8:00 PM - 10:00 PM", status: "Cancelled", amount: "₹ 4,000" },
     ];
 
-    const handleLogout = () => {
+    const handleLogout = async () => {
         localStorage.removeItem("client_token");
         localStorage.removeItem("client_id");
+        // Also sign out from the auth store
+        const { signOut } = await import("@/lib/auth");
+        await signOut();
         toast.success("Logged out successfully");
-        navigate("/client/login");
+        navigate("/more");
     };
 
     const handleNavigate = (path: string) => {
         navigate(path);
     };
 
-    // Check if client is logged in and connect to WebSocket
+    // Check if client is logged in and connect to WebSocket (only in real backend mode)
     useEffect(() => {
+        // In mock mode, skip WebSocket and client_token checks — auth store is sufficient
+        if (isMockMode) {
+            // Simulate some real-time updates with mock data
+            const mockUpdates = [
+                { type: "booking", message: "New booking: Rahul Sharma", timestamp: "10:30 AM" },
+                { type: "slot", message: "Slot 14:00-16:00 now available", timestamp: "10:15 AM" },
+                { type: "booking", message: "Booking confirmed: Priya Patel", timestamp: "09:45 AM" },
+            ];
+            setRealTimeUpdates(mockUpdates);
+            return;
+        }
+
         const token = localStorage.getItem("client_token");
         if (!token) {
             navigate("/client/login");
             return;
         }
 
-        // Connect to WebSocket
+        // Connect to WebSocket (only when real backend is available)
         ws.connect(token);
 
         // Subscribe to WebSocket events
@@ -90,7 +108,6 @@ const ClientDashboard = () => {
 
         const unsubscribeDisconnected = ws.on("disconnected", () => {
             setWsConnected(false);
-            toast.warning("Real-time updates disconnected");
         });
 
         const unsubscribeBookingUpdated = ws.on("booking_updated", (data) => {

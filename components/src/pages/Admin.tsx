@@ -2,8 +2,8 @@ import { ChangeEvent, useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Download, Plus, Save, Trash2, Upload, Lock, Unlock } from "lucide-react";
 import { toast } from "sonner";
-import { MobileShell } from "@/components/layout/MobileShell";
-import { BackButton } from "@/components/layout/BackButton";
+import { MobileShell } from "@/layout/MobileShell";
+import { BackButton } from "@/layout/BackButton";
 import { useAuth } from "@/hooks/use-auth";
 import { api } from "@/lib/api";
 import type { Banner, Booking, Offer, Tournament, Turf } from "@/data/seed";
@@ -451,6 +451,15 @@ function SimpleList({ items, kind, refresh }: { items: Array<Banner | Offer | To
     refresh();
   };
 
+  const remove = async (id: string) => {
+    if (!confirm(`Delete this ${kind}?`)) return;
+    if (kind === "banner") await api.admin.deleteBanner(id);
+    if (kind === "offer") await api.admin.deleteOffer(id);
+    if (kind === "tournament") await api.admin.deleteTournament(id);
+    toast.success(`${kind} deleted`);
+    refresh();
+  };
+
   return (
     <>
       <button onClick={add} className="pressable inline-flex w-full items-center justify-center gap-2 rounded-full bg-primary py-3 font-semibold text-primary-foreground shadow-neon">
@@ -463,6 +472,9 @@ function SimpleList({ items, kind, refresh }: { items: Array<Banner | Offer | To
             <p className="line-clamp-1 text-sm font-semibold">{"title" in item ? item.title : item.name}</p>
             <p className="line-clamp-1 text-[11px] text-muted2">{"subtitle" in item ? item.subtitle : item.date}</p>
           </div>
+          <button onClick={() => remove(String(item.id))} className="pressable h-8 w-8 rounded-full grid place-items-center text-red-400 hover:bg-red-400/10 transition-colors" aria-label={`Delete ${kind}`}>
+            <Trash2 className="h-4 w-4" />
+          </button>
         </div>
       ))}
     </>

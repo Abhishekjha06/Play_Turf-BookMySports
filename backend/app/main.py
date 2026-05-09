@@ -7,8 +7,9 @@ from sqlalchemy import select
 
 from app.core.config import get_settings
 from app.core.logging import setup_logging
+from app.core.security import get_password_hash
 from app.db.base import Base
-from app.db.models import Turf
+from app.db.models import Turf, User
 from app.db.session import SessionLocal, engine
 from app.modules.auth.router import router as auth_router
 from app.modules.auth.client_router import router as client_auth_router
@@ -35,6 +36,7 @@ def startup() -> None:
     Base.metadata.create_all(bind=engine)
     db = SessionLocal()
     try:
+        # Seed turfs
         existing = db.scalar(select(Turf.id).limit(1))
         if existing is None:
             db.add_all(
@@ -57,6 +59,37 @@ def startup() -> None:
                     ),
                 ]
             )
+            db.commit()
+
+        # Seed admin user
+        admin_email = "admin@playturf.app"
+        existing_admin = db.scalar(select(User.id).where(User.email == admin_email))
+        if existing_admin is None:
+            admin = User(
+                phone="0000000000",
+                email=admin_email,
+                name="Admin",
+                role="admin",
+                is_active=True,
+                password_hash=get_password_hash("admin123"),
+            )
+            db.add(admin)
+            db.commit()
+
+        # Seed demo client user
+        client_id = "demo_client"
+        existing_client = db.scalar(select(User.id).where(User.client_id == client_id))
+        if existing_client is None:
+            client = User(
+                phone="0000000001",
+                email="client@playturf.app",
+                name="Demo Client",
+                role="client",
+                is_active=True,
+                client_id=client_id,
+                password_hash=get_password_hash("demo123"),
+            )
+            db.add(client)
             db.commit()
     finally:
         db.close()

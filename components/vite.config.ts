@@ -11,12 +11,16 @@ export default defineConfig(({ mode }) => ({
     hmr: {
       overlay: false,
     },
+    fs: {
+      allow: ['..'],
+    },
   },
   plugins: [react(), mode === "development" && componentTagger()].filter(Boolean),
   resolve: {
     alias: [
       { find: "@/assets", replacement: path.resolve(__dirname, "../assets") },
-      { find: "@/components", replacement: path.resolve(__dirname, "./src") },
+      { find: "@/components", replacement: path.resolve(__dirname, "./src/components") },
+      { find: "@/ui", replacement: path.resolve(__dirname, "./src/ui") },
       { find: "@", replacement: path.resolve(__dirname, "./src") },
     ],
     dedupe: ["react", "react-dom", "react/jsx-runtime", "react/jsx-dev-runtime", "@tanstack/react-query", "@tanstack/query-core"],

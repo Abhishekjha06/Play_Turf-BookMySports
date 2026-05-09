@@ -39,8 +39,8 @@ const LS_TOURNAMENTS = "playturf:tournaments";
 const LS_FAVORITES = "playturf:favorites";
 const LS_REVIEWS = "playturf:reviews";
 const LS_ACCESS_TOKEN = "playturf:access_token";
-const ADMIN_EMAIL = "abhishek123@";
-const ADMIN_PASSWORD = "9765075127@Aj";
+const ADMIN_EMAIL = "admin@playturf.app";
+const ADMIN_PASSWORD = "admin123";
 
 function lsGet<T>(key: string, fallback: T): T {
   try {
@@ -105,13 +105,14 @@ function setAccessToken(token: string | null) {
 
 function normalizeUser(raw: Partial<User> & { role?: string; user_id?: string | number }): User {
   const userId = raw.user_id ?? "";
-  const role = raw.role ?? "";
+  const role = raw.role ?? "user";
   return {
     user_id: String(userId),
     email: raw.email ?? "",
     name: raw.name ?? "Player",
     picture: raw.picture ?? "",
     is_admin: raw.is_admin ?? role === "admin",
+    role: role,
   };
 }
 
@@ -369,6 +370,7 @@ export const api = {
         name: payload.name || "Player One",
         picture: "",
         is_admin: false,
+        role: "user",
       };
       setMockUser(u);
       return u;
@@ -397,6 +399,7 @@ export const api = {
         name: "Player One",
         picture: "",
         is_admin: false,
+        role: "user",
       };
       setMockUser(u);
       return u;
@@ -415,15 +418,18 @@ export const api = {
     }
     return normalizeUser(response as Partial<User>);
   },
-  async mockGoogleSignIn(asAdmin = false): Promise<User> {
+  async mockGoogleSignIn(role: "user" | "admin" | "client" = "user"): Promise<User> {
     // dev helper used by /login when no backend is wired
     await delay(250);
+    const isAdmin = role === "admin";
+    const isClient = role === "client";
     const u: User = {
       user_id: uid("user"),
-      email: asAdmin ? "admin@playturf.app" : "you@playturf.app",
-      name: asAdmin ? "Admin" : "Player One",
+      email: isAdmin ? "admin@playturf.app" : isClient ? "client@playturf.app" : "you@playturf.app",
+      name: isAdmin ? "Admin" : isClient ? "Demo Client" : "Player One",
       picture: "",
-      is_admin: asAdmin,
+      is_admin: isAdmin,
+      role,
     };
     setMockUser(u);
     return u;
@@ -449,11 +455,12 @@ export const api = {
       throw new Error("Invalid admin ID or password");
     }
     const u: User = {
-      user_id: "admin_abhishek123",
+      user_id: "admin_001",
       email: ADMIN_EMAIL,
       name: "Admin",
       picture: "",
       is_admin: true,
+      role: "admin",
     };
     setMockUser(u);
     return u;
@@ -484,6 +491,7 @@ export const api = {
         name: "Abhishek",
         picture: "",
         is_admin: false,
+        role: "client",
       };
       setMockUser(u);
       // Store client-specific token
@@ -501,6 +509,7 @@ export const api = {
       name: "Demo Client",
       picture: "",
       is_admin: false,
+      role: "client",
     };
     setMockUser(u);
     // Store client-specific token
@@ -587,6 +596,28 @@ export const api = {
       );
     }
     return http<Booking[]>("/bookings/upcoming");
+  },
+  async getBooking(id: string): Promise<Booking> {
+    if (USE_MOCK) {
+      await delay(100);
+      const b = getMockBookings().find((b) => b.id === id);
+      if (!b) throw new Error("Booking not found");
+      return b;
+    }
+    return http<Booking>(`/bookings/${id}`);
+  },
+  async cancelBooking(id: string): Promise<Booking> {
+    if (USE_MOCK) {
+      await delay(300);
+      const list = getMockBookings();
+      const idx = list.findIndex((b) => b.id === id);
+      if (idx < 0) throw new Error("Booking not found");
+      if (list[idx].status === "CANCELLED") throw new Error("Already cancelled");
+      list[idx] = { ...list[idx], status: "CANCELLED" };
+      setMockBookings(list);
+      return list[idx];
+    }
+    return http<Booking>(`/bookings/${id}/cancel`, { method: "POST" });
   },
 
   // ---------- ADMIN ----------

@@ -1,20 +1,22 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { motion } from "framer-motion";
-import { MobileShell } from "@/components/layout/MobileShell";
-import { AppHeader } from "@/components/layout/AppHeader";
-import { BottomNav } from "@/components/layout/BottomNav";
-import { SearchBar } from "@/components/home/SearchBar";
-import { LocationFilter } from "@/components/home/LocationFilter";
-import { HeroCarousel } from "@/components/home/HeroCarousel";
-import { CategoryPills } from "@/components/home/CategoryPills";
-import { SectionHeader } from "@/components/home/SectionHeader";
-import { TurfCard } from "@/components/turf/TurfCard";
-import { CompactTurfCard } from "@/components/turf/CompactTurfCard";
-import { OfferCard } from "@/components/offers/OfferCard";
-import { BookingRow } from "@/components/booking/BookingRow";
+import { MobileShell } from "@/layout/MobileShell";
+import { AppHeader } from "@/layout/AppHeader";
+import { BottomNav } from "@/layout/BottomNav";
+import { SearchBar } from "@/home/SearchBar";
+import { LocationFilter } from "@/home/LocationFilter";
+import { HeroCarousel } from "@/home/HeroCarousel";
+import { CategoryPills } from "@/home/CategoryPills";
+import { SectionHeader } from "@/home/SectionHeader";
+import { TurfCard } from "@/turf/TurfCard";
+import { CompactTurfCard } from "@/turf/CompactTurfCard";
+import { OfferCard } from "@/offers/OfferCard";
+import { BookingRow } from "@/booking/BookingRow";
+import { getPopularTurfs, getNearbyTurfs, getAllTurfs } from "@/services/turfService";
+import { getOffers } from "@/services/offerService";
 import { api } from "@/lib/api";
-import type { Banner, Booking, Offer, Turf } from "@/data/seed";
+import type { Banner, Booking, Turf, Offer } from "@/data/seed";
 import { toast } from "sonner";
 
 const cityCoords: Record<string, { lat: number; lon: number }> = {
@@ -49,6 +51,7 @@ const Home = () => {
   const minRating = params.get("minRating") || "";
   const openNow = params.get("openNow") === "1";
 
+  // ── Section data via service layer (mock → Supabase ready) ────────
   const [banners, setBanners] = useState<Banner[]>([]);
   const [allTurfs, setAllTurfs] = useState<Turf[]>([]);
   const [popular, setPopular] = useState<Turf[]>([]);
@@ -61,15 +64,18 @@ const Home = () => {
 
   useEffect(() => {
     void Promise.all([
+      // Banners & bookings still use the legacy api (no service yet)
       api.listBanners().then(setBanners),
-      api.listTurfs().then(setAllTurfs),
-      api.listTurfs({ popular: true }).then(setPopular),
-      api.listTurfs({ nearby: true }).then(setNear),
-      api.listOffers().then(setOffers),
       api.upcomingBookings().then(setUpcoming),
+      // Turf & offer data via the new service layer
+      getAllTurfs().then(setAllTurfs),
+      getPopularTurfs(10).then(setPopular),
+      getNearbyTurfs(null, 10).then(setNear),
+      getOffers(10).then(setOffers),
     ]);
   }, []);
 
+  // ── Search / filter logic ─────────────────────────────────────────
   useEffect(() => {
     const opts = {
       q,
@@ -82,8 +88,10 @@ const Home = () => {
       openNow,
       userLocation: userLocation || undefined,
     };
-    if (q || selectedCity || selectedArea || selectedSport || selectedAmenity || maxPrice || minRating || openNow) api.listTurfs(opts).then(setResults);
-    else if (nearby) api.listTurfs({ nearby: true, userLocation: userLocation || undefined }).then(setResults);
+    if (q || selectedCity || selectedArea || selectedSport || selectedAmenity || maxPrice || minRating || openNow)
+      api.listTurfs(opts).then(setResults);
+    else if (nearby)
+      api.listTurfs({ nearby: true, userLocation: userLocation || undefined }).then(setResults);
     else setResults(null);
   }, [q, nearby, selectedCity, selectedArea, selectedSport, selectedAmenity, maxPrice, minRating, openNow, userLocation]);
 
@@ -174,24 +182,34 @@ const Home = () => {
           <HeroCarousel banners={banners} />
           <CategoryPills />
 
+          {/* ── Popular Turfs ──────────────────────────────────────── */}
           <SectionHeader title="Popular Turfs" to="/?nearby=1" action="See all" />
           <div className="grid grid-cols-2 gap-3 px-4">
-            {popular.slice(0, 4).map((t, i) => (<TurfCard key={t.id} turf={t} index={i} userLocation={userLocation} />))}
+            {popular.slice(0, 4).map((t, i) => (
+              <TurfCard key={t.id} turf={t} index={i} userLocation={userLocation} />
+            ))}
           </div>
 
-          <SectionHeader title="Top Picks Near You" to="/?nearby=1" />
+          {/* ── Top Picks Near You ─────────────────────────────────── */}
+          <SectionHeader title="Top Picks Near You" to="/?nearby=1" action="See all" />
           <div className="flex gap-3 overflow-x-auto no-scrollbar px-4 pb-1">
-            {near.map((t) => (<CompactTurfCard key={t.id} turf={t} userLocation={userLocation} />))}
+            {near.map((t) => (
+              <CompactTurfCard key={t.id} turf={t} userLocation={userLocation} />
+            ))}
           </div>
 
-          <SectionHeader title="Offers & Deals" to="/offers" />
+          {/* ── Offers & Deals ─────────────────────────────────────── */}
+          <SectionHeader title="Offers & Deals" to="/offers" action="See all" />
           <div className="flex gap-3 overflow-x-auto no-scrollbar px-4 pb-1">
-            {offers.map((o) => (<OfferCard key={o.id} offer={o} />))}
+            {offers.map((o) => (
+              <OfferCard key={o.id} offer={o} />
+            ))}
           </div>
 
+          {/* ── Upcoming Bookings ──────────────────────────────────── */}
           {upcoming.length > 0 && (
             <>
-              <SectionHeader title="Upcoming Bookings" to="/bookings" />
+              <SectionHeader title="Upcoming Bookings" to="/bookings" action="See all" />
               <motion.div
                 initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
                 className="px-4 flex flex-col gap-2"

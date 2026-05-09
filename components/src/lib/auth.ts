@@ -9,6 +9,7 @@ import {
   formatTimeRemaining,
   resetLockout,
 } from "@/lib/admin-attempt-tracker";
+import { signInWithGoogle as authServiceGoogle } from "@/services/authService";
 
 // minimal store using plain event emitter pattern
 type Listener = () => void;
@@ -26,9 +27,20 @@ export async function refreshUser() {
   _loading = false; emit();
 }
 
-export async function signInMock(admin = false) {
-  _user = await api.mockGoogleSignIn(admin);
+export async function signInMock(role: "user" | "admin" | "client" = "user") {
+  _user = await api.mockGoogleSignIn(role);
   emit();
+}
+
+/**
+ * Sign in with Google.
+ * Uses authService which checks Supabase → real backend → mock fallback.
+ * Updates the auth store and notifies subscribers.
+ */
+export async function signInWithGoogle(role: "user" | "admin" | "client" = "user"): Promise<User> {
+  _user = await authServiceGoogle(role);
+  emit();
+  return _user;
 }
 
 export async function requestOtp(phone: string) {
@@ -40,7 +52,7 @@ export async function signInWithOtp(phone: string, otp: string, name?: string) {
   emit();
 }
 
-export async function signInAdmin(email: string, password: string) {
+export async function signInAdmin(email: string, password: string): Promise<User> {
   // Check if account is locked
   if (isLocked(email)) {
     const timeRemaining = getTimeUntilUnlocked(email);
@@ -54,6 +66,7 @@ export async function signInAdmin(email: string, password: string) {
     // Clear attempts on successful login
     clearAttempts(email);
     emit();
+    return _user;
   } catch (error) {
     // Track failed attempt
     trackFailedAttempt(email);
@@ -80,6 +93,53 @@ export async function signOut() {
   await api.logout();
   _user = null;
   emit();
+}
+
+export async function signInUser(email: string, password: string): Promise<User> {
+  // Check if account is locked
+  if (isLocked(email)) {
+    const timeRemaining = getTimeUntilUnlocked(email);
+    throw new Error(
+      `Account locked. Try again in ${formatTimeRemaining(timeRemaining)}`
+    );
+  }
+
+  try {
+    // First try admin login
+    _user = await api.adminPasswordSignIn(email, password);
+    // Clear attempts on successful login
+    clearAttempts(email);
+    emit();
+    return _user;
+  } catch (adminError) {
+    // If admin login fails, try client login
+    try {
+      _user = await api.clientLogin(email, password);
+      // Clear attempts on successful login
+      clearAttempts(email);
+      emit();
+      return _user;
+    } catch (clientError) {
+      // Track failed attempt
+      trackFailedAttempt(email);
+      const remaining = getRemainingAttempts(email);
+
+      if (remaining === 0) {
+        const timeRemaining = getTimeUntilUnlocked(email);
+        throw new Error(
+          `Invalid credentials. Account locked for ${formatTimeRemaining(timeRemaining)}`
+        );
+      } else if (remaining === 1) {
+        throw new Error(
+          `Invalid credentials. 1 attempt remaining before lockout`
+        );
+      } else {
+        throw new Error(
+          `Invalid credentials. ${remaining} attempts remaining`
+        );
+      }
+    }
+  }
 }
 
 export function subscribe(l: Listener): () => void {

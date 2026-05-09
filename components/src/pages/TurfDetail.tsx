@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { MobileShell } from "@/components/layout/MobileShell";
-import { BackButton } from "@/components/layout/BackButton";
+import { MobileShell } from "@/layout/MobileShell";
+import { BackButton } from "@/layout/BackButton";
 import { api } from "@/lib/api";
 import type { Turf } from "@/data/seed";
 import type { Review } from "@/data/seed";
@@ -49,6 +49,23 @@ const TurfDetail = () => {
     }
   };
 
+  const handleShare = async () => {
+    if (!turf) return;
+    const text = [
+      `Play Turf - ${turf.name}`,
+      `📍 ${turf.address}`,
+      `⏰ ${turf.timing}`,
+      `₹${turf.price_per_hour}/hr`,
+      `⭐ ${turf.rating} rating`,
+    ].join("\n");
+    if (navigator.share) {
+      await navigator.share({ title: turf.name, text, url: window.location.href });
+    } else {
+      await navigator.clipboard.writeText(text);
+      toast.success("Turf details copied!");
+    }
+  };
+
   if (!turf) return <MobileShell><div className="p-6 text-soft">Loading…</div></MobileShell>;
 
   return (
@@ -59,7 +76,7 @@ const TurfDetail = () => {
         <div className="absolute top-4 left-4 right-4 flex items-center justify-between">
           <BackButton />
           <div className="flex gap-2">
-            <button className="h-10 w-10 rounded-full glass grid place-items-center pressable" aria-label="Share">
+            <button onClick={handleShare} className="h-10 w-10 rounded-full glass grid place-items-center pressable" aria-label="Share">
               <Share2 className="h-5 w-5" />
             </button>
             <button onClick={toggleFavorite} className="h-10 w-10 rounded-full glass grid place-items-center pressable" aria-label="Favourite">

@@ -1,11 +1,12 @@
 import { useEffect, useState } from "react";
-import { MobileShell } from "@/components/layout/MobileShell";
-import { AppHeader } from "@/components/layout/AppHeader";
-import { BottomNav } from "@/components/layout/BottomNav";
+import { MobileShell } from "@/layout/MobileShell";
+import { AppHeader } from "@/layout/AppHeader";
+import { BottomNav } from "@/layout/BottomNav";
 import { api } from "@/lib/api";
 import type { Tournament } from "@/data/seed";
 import { Trophy, MapPin, Calendar, Users } from "lucide-react";
 import { motion } from "framer-motion";
+import { toast } from "sonner";
 
 const Tournaments = () => {
   const [list, setList] = useState<Tournament[]>([]);
@@ -43,7 +44,10 @@ const Tournaments = () => {
             </div>
             <div className="px-3 pb-3 flex items-center justify-between">
               <p className="text-sm">Entry <span className="neon-text font-bold">₹{t.entry_fee}</span></p>
-              <button className="bg-primary text-primary-foreground rounded-full px-4 py-2 text-xs font-semibold shadow-neon pressable">
+              <button
+                onClick={() => toast.info(`Registration for "${t.name}" coming soon!`)}
+                className="bg-primary text-primary-foreground rounded-full px-4 py-2 text-xs font-semibold shadow-neon pressable"
+              >
                 Register
               </button>
             </div>

@@ -1,14 +1,14 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { MobileShell } from "@/components/layout/MobileShell";
-import { BackButton } from "@/components/layout/BackButton";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { MobileShell } from "@/layout/MobileShell";
+import { BackButton } from "@/layout/BackButton";
+import { Button } from "@/ui/button";
+import { Input } from "@/ui/input";
+import { Label } from "@/ui/label";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/ui/card";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
-import { api } from "@/lib/api";
+import { signInWithGoogle } from "@/lib/auth";
 
 const ClientLogin = () => {
     const navigate = useNavigate();
@@ -27,19 +27,12 @@ const ClientLogin = () => {
             if (clientId.trim() === "abhishek1018@" && password === "123456789") {
                 localStorage.setItem("client_token", "mock_client_token_abhishek");
                 localStorage.setItem("client_id", "abhishek1018@");
+                // Update auth store so ClientRoute allows access
+                await signInWithGoogle("client");
                 toast.success("Login successful - Welcome Abhishek!");
                 navigate("/client/dashboard");
             } else {
-                // Try API login (mock for now)
-                const user = await api.clientLogin(clientId.trim(), password);
-                if (user) {
-                    localStorage.setItem("client_token", "mock_client_token");
-                    localStorage.setItem("client_id", clientId.trim());
-                    toast.success("Login successful");
-                    navigate("/client/dashboard");
-                } else {
-                    toast.error("Invalid client ID or password");
-                }
+                toast.error("Invalid client ID or password. Use demo button below for testing.");
             }
         } catch (error) {
             toast.error((error as Error).message || "Invalid credentials");
@@ -52,7 +45,9 @@ const ClientLogin = () => {
         // For demo purposes, simulate client login with test credentials
         localStorage.setItem("client_token", "mock_client_token_abhishek");
         localStorage.setItem("client_id", "abhishek1018@");
-        toast.success("Mock login with test credentials successful");
+        // Update auth store so ClientRoute allows access
+        await signInWithGoogle("client");
+        toast.success("Demo client login successful");
         navigate("/client/dashboard");
     };
 

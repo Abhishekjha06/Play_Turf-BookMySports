@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
-import { MobileShell } from "@/components/layout/MobileShell";
-import { AppHeader } from "@/components/layout/AppHeader";
-import { BottomNav } from "@/components/layout/BottomNav";
+import { MobileShell } from "@/layout/MobileShell";
+import { AppHeader } from "@/layout/AppHeader";
+import { BottomNav } from "@/layout/BottomNav";
 import { api } from "@/lib/api";
 import type { Offer } from "@/data/seed";
 import { motion } from "framer-motion";

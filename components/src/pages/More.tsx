@@ -1,149 +1,212 @@
-import { Link, useNavigate } from "react-router-dom";
-import { useState } from "react";
-import { MobileShell } from "@/components/layout/MobileShell";
-import { AppHeader } from "@/components/layout/AppHeader";
-import { BottomNav } from "@/components/layout/BottomNav";
+import { Link } from "react-router-dom";
+import { MobileShell } from "@/layout/MobileShell";
+import { AppHeader } from "@/layout/AppHeader";
+import { BottomNav } from "@/layout/BottomNav";
 import { useAuth } from "@/hooks/use-auth";
-import { signOut, signInAdmin } from "@/lib/auth";
-import { LogOut, ShieldCheck, Bell, FileText, ChevronRight, UserCircle2, Lock } from "lucide-react";
+import { signOut, signInWithGoogle } from "@/lib/auth";
+import { GoogleLoginButton } from "@/components/GoogleLoginButton";
+import {
+  LogOut,
+  Bell,
+  FileText,
+  ChevronRight,
+  UserCircle2,
+  Lock,
+  Shield,
+  Briefcase,
+  Zap,
+  RefreshCw,
+} from "lucide-react";
 import { toast } from "sonner";
+import { useState } from "react";
 
 const More = () => {
   const { user } = useAuth();
-  const navigate = useNavigate();
+  const [switching, setSwitching] = useState(false);
 
-  const regularItems = [
-    { label: "Notifications", icon: Bell, to: "#" },
-    { label: "Terms of Service", icon: FileText, to: "#" },
+  const menuItems = [
+    { label: "Notifications", icon: Bell, to: "", toast: "Notifications coming soon!" },
+    { label: "Terms of Service", icon: FileText, to: "", toast: "Terms of Service coming soon!" },
   ];
 
-  const isAdmin = user?.is_admin ?? false;
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
-  const [loading, setLoading] = useState(false);
+  const handleSignOut = async () => {
+    await signOut();
+    toast.success("Signed out");
+  };
 
-  const handleAdminLogin = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError("");
-    setLoading(true);
+  const handleQuickLogin = async (role: "admin" | "client") => {
+    setSwitching(true);
     try {
-      await signInAdmin(email, password);
-      toast.success("Admin login successful");
-      // The auth state will update via useAuth, causing re-render
-    } catch (err: any) {
-      setError(err.message || "Invalid credentials");
+      await signInWithGoogle(role);
+      toast.success(`Signed in as ${role === "admin" ? "Admin" : "Client"}`);
+    } catch {
+      toast.error("Sign-in failed");
     } finally {
-      setLoading(false);
+      setSwitching(false);
     }
   };
 
   return (
     <MobileShell>
       <AppHeader />
+
+      {/* ── Profile card ─────────────────────────────────────────── */}
       <section className="px-4 mt-4">
         <div className="card-panel rounded-3xl p-4 flex items-center gap-3">
           <div className="h-14 w-14 rounded-full bg-gradient-neon text-primary-foreground grid place-items-center font-bold text-xl">
-            {user ? (user.name[0] ?? "U").toUpperCase() : <UserCircle2 className="h-6 w-6" />}
+            {user ? (
+              (user.name[0] ?? "U").toUpperCase()
+            ) : (
+              <UserCircle2 className="h-6 w-6" />
+            )}
           </div>
           <div className="flex-1 min-w-0">
             <p className="font-semibold text-sm">{user?.name ?? "Guest"}</p>
-            <p className="text-xs text-muted2 truncate">{user?.email ?? "Sign in to start booking"}</p>
+            <p className="text-xs text-muted2 truncate">
+              {user?.email ?? "Sign in to start booking"}
+            </p>
           </div>
           {!user && (
-            <Link to="/login" className="bg-primary text-primary-foreground rounded-full px-4 py-2 text-xs font-semibold shadow-neon">
+            <Link
+              to="/login"
+              className="bg-primary text-primary-foreground rounded-full px-4 py-2 text-xs font-semibold shadow-neon"
+            >
               Sign in
             </Link>
           )}
         </div>
       </section>
 
+      {/* ── Menu links ───────────────────────────────────────────── */}
       <section className="px-4 mt-5 flex flex-col gap-2">
-        {regularItems.map((it) => (
-          <Link
+        {menuItems.map((it) => (
+          <button
             key={it.label}
-            to={it.to}
-            className="card-panel rounded-2xl px-4 py-3 flex items-center gap-3 pressable"
+            onClick={() => toast.info(it.toast)}
+            className="card-panel rounded-2xl px-4 py-3 flex items-center gap-3 pressable text-left w-full"
           >
-            <div className="h-9 w-9 rounded-full bg-panel-3 grid place-items-center"><it.icon className="h-4 w-4 text-primary" /></div>
+            <div className="h-9 w-9 rounded-full bg-panel-3 grid place-items-center">
+              <it.icon className="h-4 w-4 text-primary" />
+            </div>
             <span className="flex-1 text-sm">{it.label}</span>
             <ChevronRight className="h-4 w-4 text-muted2" />
-          </Link>
+          </button>
         ))}
 
-        {/* Admin Panel / Login */}
-        <div className="card-panel rounded-2xl px-4 py-3 flex flex-col gap-3">
-          <div className="flex items-center gap-3">
-            <div className="h-9 w-9 rounded-full bg-panel-3 grid place-items-center">
-              {isAdmin ? (
-                <ShieldCheck className="h-4 w-4 text-primary" />
-              ) : (
-                <Lock className="h-4 w-4 text-primary" />
-              )}
-            </div>
-            <span className="flex-1 text-sm font-semibold">
-              {isAdmin ? "Admin Panel" : "Admin Login"}
-            </span>
-            {isAdmin && <ChevronRight className="h-4 w-4 text-muted2" />}
+        {/* Google login (for guests) */}
+        {!user && (
+          <div className="mt-2">
+            <GoogleLoginButton variant="outline" />
           </div>
+        )}
 
-          {isAdmin ? (
-            <>
-              <p className="text-xs text-muted2">Manage turfs, bookings, offers, etc.</p>
-              <Link
-                to="/admin"
-                className="pressable mt-2 inline-flex items-center justify-center gap-2 rounded-full bg-primary py-2 px-4 text-xs font-semibold text-primary-foreground shadow-neon"
-              >
-                Go to Admin Dashboard
-              </Link>
-            </>
-          ) : (
-            <form onSubmit={handleAdminLogin}>
-              <div className="mt-4 rounded-3xl border border-white/10 bg-panel-2/80 p-4 text-left">
-                <p className="text-xs font-semibold uppercase tracking-[0.22em] text-muted2">Admin access</p>
-                <input
-                  className="mt-3 h-12 w-full rounded-2xl border border-white/10 bg-background px-4 text-sm outline-none focus:border-primary"
-                  placeholder="Gmail / admin ID"
-                  data-testid="admin-email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  type="text"
-                  required
-                />
-                <input
-                  type="password"
-                  className="mt-2 h-12 w-full rounded-2xl border border-white/10 bg-background px-4 text-sm outline-none focus:border-primary"
-                  placeholder="Password"
-                  data-testid="admin-password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
-                />
-                {error && <p className="mt-2 text-xs text-destructive">{error}</p>}
-                <button
-                  type="submit"
-                  disabled={loading}
-                  className="mt-3 w-full bg-panel-2 border border-white/10 text-soft font-semibold rounded-full py-3 text-sm pressable disabled:opacity-50"
-                  data-testid="admin-signin"
-                >
-                  {loading ? "Signing in..." : "Admin Login"}
-                </button>
+        {/* Quick-login buttons for testing (guests only) */}
+        {!user && (
+          <div className="mt-1 flex gap-2">
+            <button
+              onClick={() => handleQuickLogin("admin")}
+              disabled={switching}
+              className="flex-1 card-panel rounded-2xl px-3 py-2.5 flex items-center justify-center gap-2 pressable text-xs font-semibold disabled:opacity-50"
+            >
+              <Shield className="h-3.5 w-3.5 text-primary" />
+              {switching ? "…" : "Sign in as Admin"}
+            </button>
+            <button
+              onClick={() => handleQuickLogin("client")}
+              disabled={switching}
+              className="flex-1 card-panel rounded-2xl px-3 py-2.5 flex items-center justify-center gap-2 pressable text-xs font-semibold disabled:opacity-50"
+            >
+              <Briefcase className="h-3.5 w-3.5 text-accent" />
+              {switching ? "…" : "Sign in as Client"}
+            </button>
+          </div>
+        )}
+
+        {/* Login link (for guests — email/admin login) */}
+        {!user && (
+          <Link
+            to="/login"
+            className="card-panel rounded-2xl px-4 py-3 flex items-center gap-3 pressable"
+          >
+            <div className="h-9 w-9 rounded-full bg-panel-3 grid place-items-center">
+              <Lock className="h-4 w-4 text-primary" />
+            </div>
+            <span className="flex-1 text-sm font-semibold">Login with Email</span>
+            <ChevronRight className="h-4 w-4 text-muted2" />
+          </Link>
+        )}
+
+        {/* Admin Panel & Client Panel (for logged-in users) */}
+        {user && (
+          <>
+            <Link
+              to="/admin"
+              className="card-panel rounded-2xl px-4 py-3 flex items-center gap-3 pressable"
+            >
+              <div className="h-9 w-9 rounded-full bg-primary/15 grid place-items-center">
+                <Shield className="h-4 w-4 text-primary" />
               </div>
-            </form>
-          )}
-        </div>
+              <span className="flex-1 text-sm font-semibold">Admin Panel</span>
+              <ChevronRight className="h-4 w-4 text-muted2" />
+            </Link>
 
+            <Link
+              to="/client/dashboard"
+              className="card-panel rounded-2xl px-4 py-3 flex items-center gap-3 pressable"
+            >
+              <div className="h-9 w-9 rounded-full bg-accent/15 grid place-items-center">
+                <Briefcase className="h-4 w-4 text-accent" />
+              </div>
+              <span className="flex-1 text-sm font-semibold">Client Panel</span>
+              <ChevronRight className="h-4 w-4 text-muted2" />
+            </Link>
+
+            {/* Role switcher (for testing — switch between roles without logging out) */}
+            {user.role !== "admin" && (
+              <button
+                onClick={() => handleQuickLogin("admin")}
+                disabled={switching}
+                className="card-panel rounded-2xl px-4 py-3 flex items-center gap-3 pressable text-left disabled:opacity-50"
+              >
+                <div className="h-9 w-9 rounded-full bg-primary/10 grid place-items-center">
+                  <RefreshCw className="h-4 w-4 text-primary" />
+                </div>
+                <span className="flex-1 text-sm">Switch to Admin</span>
+                <Zap className="h-3.5 w-3.5 text-primary" />
+              </button>
+            )}
+            {user.role !== "client" && (
+              <button
+                onClick={() => handleQuickLogin("client")}
+                disabled={switching}
+                className="card-panel rounded-2xl px-4 py-3 flex items-center gap-3 pressable text-left disabled:opacity-50"
+              >
+                <div className="h-9 w-9 rounded-full bg-accent/10 grid place-items-center">
+                  <RefreshCw className="h-4 w-4 text-accent" />
+                </div>
+                <span className="flex-1 text-sm">Switch to Client</span>
+                <Zap className="h-3.5 w-3.5 text-accent" />
+              </button>
+            )}
+          </>
+        )}
+
+        {/* Sign out (for logged-in users) */}
         {user && (
           <button
-            onClick={async () => { await signOut(); toast.success("Signed out"); navigate("/"); }}
+            onClick={handleSignOut}
             className="card-panel rounded-2xl px-4 py-3 flex items-center gap-3 pressable text-left"
             data-testid="logout-btn"
           >
-            <div className="h-9 w-9 rounded-full bg-destructive/15 grid place-items-center"><LogOut className="h-4 w-4 text-destructive" /></div>
+            <div className="h-9 w-9 rounded-full bg-destructive/15 grid place-items-center">
+              <LogOut className="h-4 w-4 text-destructive" />
+            </div>
             <span className="flex-1 text-sm">Log out</span>
           </button>
         )}
       </section>
+
+      <div className="h-6" />
       <BottomNav />
     </MobileShell>
   );

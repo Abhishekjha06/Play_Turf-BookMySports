@@ -1,6 +1,6 @@
 from functools import lru_cache
 
-from pydantic import Field
+from pydantic import Field, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -11,9 +11,16 @@ class Settings(BaseSettings):
     environment: str = Field(default="development", alias="ENVIRONMENT")
     api_prefix: str = "/api"
     debug: bool = Field(default=False, alias="DEBUG")
+    
+    @field_validator('debug', mode='before')
+    @classmethod
+    def parse_debug(cls, v):
+        if isinstance(v, str):
+            return v.lower() in ('true', '1', 'yes', 'on')
+        return v
 
     database_url: str = Field(
-        default="postgresql+psycopg://play_turf:play_turf@localhost:5432/play_turf",
+        default="sqlite:///./play_turf.db",
         alias="DATABASE_URL",
     )
     redis_url: str = Field(default="redis://localhost:6379/0", alias="REDIS_URL")
@@ -25,7 +32,7 @@ class Settings(BaseSettings):
     secure_cookies: bool = Field(default=False, alias="SECURE_COOKIES")
     cookie_domain: str | None = Field(default=None, alias="COOKIE_DOMAIN")
 
-    allowed_origins: list[str] = ["http://localhost:8080", "http://localhost:5173"]
+    allowed_origins: list[str] = ["http://localhost:8080", "http://localhost:5173", "http://localhost:8084"]
 
 
 @lru_cache(maxsize=1)

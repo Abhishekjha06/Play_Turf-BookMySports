@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Plus, Save, Trash2 } from "lucide-react";
 import { toast } from "sonner";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/ui/dialog";
 import { useCricketBooking } from "../BookingContext";
 import { TeamAvatar } from "./TeamAvatar";
 import { NeonButton } from "./NeonButton";

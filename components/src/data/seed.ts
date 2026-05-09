@@ -99,6 +99,7 @@ export type User = {
   name: string;
   picture: string;
   is_admin: boolean;
+  role: string;
 };
 
 export const banners: Banner[] = [

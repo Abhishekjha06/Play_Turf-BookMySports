@@ -17,8 +17,8 @@ import {
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { toast } from "sonner";
-import { MobileShell } from "@/components/layout/MobileShell";
-import { BackButton } from "@/components/layout/BackButton";
+import { MobileShell } from "@/layout/MobileShell";
+import { BackButton } from "@/layout/BackButton";
 import { api } from "@/lib/api";
 import type { Booking as TurfBooking, Turf } from "@/data/seed";
 import { useAuth } from "@/hooks/use-auth";
@@ -183,18 +183,18 @@ const BookingContent = () => {
                   (() => {
                     const booked = bookedSlots.includes(s);
                     return (
-                  <button
-                    key={s}
-                    onClick={() => !booked && setSlot(s)}
-                    disabled={booked}
-                    className={cn(
-                      "pressable h-12 rounded-xl border text-sm font-semibold disabled:cursor-not-allowed disabled:opacity-35",
-                      slot === s ? "border-primary bg-primary text-primary-foreground shadow-neon" : "border-white/5 bg-panel-2 text-soft",
-                    )}
-                    data-testid={`slot-${s}`}
-                  >
-                    {booked ? "Booked" : s}
-                  </button>
+                      <button
+                        key={s}
+                        onClick={() => !booked && setSlot(s)}
+                        disabled={booked}
+                        className={cn(
+                          "pressable h-12 rounded-xl border text-sm font-semibold disabled:cursor-not-allowed disabled:opacity-35",
+                          slot === s ? "border-primary bg-primary text-primary-foreground shadow-neon" : "border-white/5 bg-panel-2 text-soft",
+                        )}
+                        data-testid={`slot-${s}`}
+                      >
+                        {booked ? "Booked" : s}
+                      </button>
                     );
                   })()
                 ))}
@@ -467,6 +467,7 @@ const BookingContent = () => {
                 <div className="mt-6 hidden grid-cols-2 gap-3 sm:grid">
                   <ReceiptButton onClick={() => downloadReceipt(booking, cricket)} label="Download Receipt" icon={Download} primary />
                   <ReceiptButton onClick={() => shareReceipt(booking, cricket)} label="Share Receipt" icon={Share2} />
+                  <ReceiptButton onClick={() => navigate(`/booking/${booking.id}`)} label="View Booking" />
                   <ReceiptButton onClick={() => navigate("/")} label="Back to Home" />
                   <ReceiptButton onClick={() => navigate(`/booking/new/${turf.id}`)} label="Book Another Match" primary />
                 </div>
@@ -484,9 +485,10 @@ const BookingContent = () => {
             </div>
 
             <div className="fixed inset-x-0 bottom-0 z-50 border-t border-white/10 bg-[#0B1020]/90 p-3 backdrop-blur-xl sm:hidden">
-              <div className="mx-auto grid max-w-[456px] grid-cols-4 gap-2">
+              <div className="mx-auto grid max-w-[456px] grid-cols-5 gap-2">
                 <button onClick={() => downloadReceipt(booking, cricket)} className="pressable rounded-2xl bg-[#39FF14] py-3 text-xs font-black text-black shadow-[0_0_24px_rgba(57,255,20,.45)]">Download</button>
                 <button onClick={() => shareReceipt(booking, cricket)} className="pressable rounded-2xl border border-white/10 bg-white/10 py-3 text-xs font-bold text-white">Share</button>
+                <button onClick={() => navigate(`/booking/${booking.id}`)} className="pressable rounded-2xl border border-cyan-400/40 bg-cyan-400/10 py-3 text-xs font-bold text-cyan-300">Booking</button>
                 <button onClick={() => navigate("/")} className="pressable rounded-2xl border border-white/10 bg-white/10 py-3 text-xs font-bold text-white">Home</button>
                 <button onClick={() => navigate(`/booking/new/${turf.id}`)} className="pressable rounded-2xl bg-[#00D9FF] py-3 text-xs font-black text-black shadow-[0_0_24px_rgba(0,217,255,.35)]">Again</button>
               </div>
@@ -552,11 +554,10 @@ function ReceiptButton({ label, icon: Icon, onClick, primary }: { label: string;
   return (
     <button
       onClick={onClick}
-      className={`pressable inline-flex items-center justify-center gap-2 rounded-2xl px-4 py-3 text-sm font-black transition ${
-        primary
-          ? "bg-gradient-to-r from-[#39FF14] to-[#00D9FF] text-black shadow-[0_0_28px_rgba(57,255,20,.32)]"
-          : "border border-white/10 bg-white/10 text-white hover:border-cyan-300/40"
-      }`}
+      className={`pressable inline-flex items-center justify-center gap-2 rounded-2xl px-4 py-3 text-sm font-black transition ${primary
+        ? "bg-gradient-to-r from-[#39FF14] to-[#00D9FF] text-black shadow-[0_0_28px_rgba(57,255,20,.32)]"
+        : "border border-white/10 bg-white/10 text-white hover:border-cyan-300/40"
+        }`}
     >
       {Icon ? <Icon className="h-4 w-4" /> : null}
       {label}

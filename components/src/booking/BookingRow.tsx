@@ -12,7 +12,7 @@ const statusStyle: Record<string, string> = {
 export function BookingRow({ booking }: { booking: Booking }) {
   return (
     <Link
-      to="/bookings"
+      to={`/booking/${booking.id}`}
       className="flex items-center gap-3 card-panel rounded-2xl p-3 pressable"
       data-testid={`booking-row-${booking.id}`}
     >

@@ -1,9 +1,9 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
-import { MobileShell } from "@/components/layout/MobileShell";
-import { AppHeader } from "@/components/layout/AppHeader";
-import { BottomNav } from "@/components/layout/BottomNav";
-import { BookingRow } from "@/components/booking/BookingRow";
+import { MobileShell } from "@/layout/MobileShell";
+import { AppHeader } from "@/layout/AppHeader";
+import { BottomNav } from "@/layout/BottomNav";
+import { BookingRow } from "@/booking/BookingRow";
 import { api } from "@/lib/api";
 import type { Booking } from "@/data/seed";
 import { useAuth } from "@/hooks/use-auth";
