@@ -119,7 +119,7 @@ const Login = () => {
   return (
     <MobileShell>
       <div className="absolute inset-0">
-        <img src={heroNight} alt="" className="absolute inset-0 h-full w-full object-cover opacity-40" />
+        <img src={heroNight} alt="" loading="lazy" decoding="async" className="absolute inset-0 h-full w-full object-cover opacity-40" />
         <div className="absolute inset-0 bg-gradient-to-b from-background/60 via-background/85 to-background" />
       </div>
 

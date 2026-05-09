@@ -205,6 +205,8 @@ const BookingDetail = () => {
                             <img
                                 src={booking.turf_image}
                                 alt={booking.turf_name}
+                                loading="lazy"
+                                decoding="async"
                                 className="h-20 w-20 rounded-xl object-cover"
                             />
                             <div className="flex-1 min-w-0">

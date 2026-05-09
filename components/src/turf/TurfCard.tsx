@@ -2,13 +2,17 @@ import { motion } from "framer-motion";
 import { Heart, Star, Clock } from "lucide-react";
 import { Link } from "react-router-dom";
 import type { Turf } from "@/data/seed";
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { api } from "@/lib/api";
 import { toast } from "sonner";
 
 export function TurfCard({ turf, index = 0, userLocation }: { turf: Turf; index?: number; userLocation?: { lat: number; lng: number } | null }) {
   const [fav, setFav] = useState(false);
   const km = userLocation ? api.distanceKm(userLocation, turf) : null;
+
+  // Respect prefers-reduced-motion: disable Framer Motion animations
+  const prefersReducedMotion = typeof window !== "undefined"
+    && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
   useEffect(() => {
     api.listFavorites().then((favorites) => setFav(favorites.includes(turf.id)));
@@ -24,15 +28,15 @@ export function TurfCard({ turf, index = 0, userLocation }: { turf: Turf; index?
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 14 }}
-      whileInView={{ opacity: 1, y: 0 }}
+      initial={prefersReducedMotion ? false : { opacity: 0, y: 14 }}
+      whileInView={prefersReducedMotion ? false : { opacity: 1, y: 0 }}
       viewport={{ once: true, amount: 0.2 }}
-      transition={{ duration: 0.35, delay: Math.min(index, 6) * 0.05 }}
+      transition={prefersReducedMotion ? { duration: 0 } : { duration: 0.35, delay: Math.min(index, 6) * 0.05 }}
       className="card-panel rounded-2xl overflow-hidden flex flex-col"
       data-testid={`turf-card-${turf.id}`}
     >
       <div className="relative aspect-[4/3]">
-        <img src={turf.image} alt={turf.name} loading="lazy" className="absolute inset-0 h-full w-full object-cover" />
+        <img src={turf.image} alt={turf.name} loading="lazy" decoding="async" className="absolute inset-0 h-full w-full object-cover" />
         <div className="absolute inset-x-0 top-0 h-16 bg-gradient-to-b from-black/60 to-transparent" />
         <button
           onClick={toggleFav}
@@ -76,3 +80,5 @@ export function TurfCard({ turf, index = 0, userLocation }: { turf: Turf; index?
     </motion.div>
   );
 }
+
+export default React.memo(TurfCard);

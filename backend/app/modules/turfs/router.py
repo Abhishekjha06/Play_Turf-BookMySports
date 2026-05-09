@@ -1,11 +1,11 @@
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, HTTPException, Query, Depends
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 from pydantic import BaseModel
+from fastapi_cache.decorator import cache
 
 from app.db.models import Booking, Turf
 from app.db.session import get_db
-from fastapi import Depends
 
 router = APIRouter(prefix="/turfs", tags=["turfs"])
 
@@ -22,13 +22,16 @@ class TurfOut(BaseModel):
 
 
 @router.get("", response_model=list[TurfOut])
-def list_turfs(
+@cache(expire=300)
+async def list_turfs(
     q: str | None = Query(default=None),
     city: str | None = Query(default=None),
     popular: bool = Query(default=False),
+    skip: int = Query(default=0, ge=0),
+    limit: int = Query(default=50, ge=1, le=100),
     db: Session = Depends(get_db),
 ) -> list[TurfOut]:
-    query = select(Turf)
+    query = select(Turf).offset(skip).limit(limit)
     if city:
         query = query.where(Turf.city.ilike(city))
     if popular:

@@ -3,7 +3,7 @@ from datetime import datetime, timedelta
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel
 from sqlalchemy import select
-from sqlalchemy.orm import joinedload
+from sqlalchemy.orm import selectinload
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
@@ -101,7 +101,7 @@ def create_booking(
 def my_bookings(db: Session = Depends(get_db), user: User = Depends(get_current_user)) -> list[BookingOut]:
     bookings = db.scalars(
         select(Booking)
-        .options(joinedload(Booking.turf))
+        .options(selectinload(Booking.turf))
         .where(Booking.user_id == user.id)
         .order_by(Booking.created_at.desc())
     ).all()
@@ -113,7 +113,7 @@ def upcoming_bookings(db: Session = Depends(get_db), user: User = Depends(get_cu
     today = datetime.utcnow().date().isoformat()
     bookings = db.scalars(
         select(Booking)
-        .options(joinedload(Booking.turf))
+        .options(selectinload(Booking.turf))
         .where(Booking.user_id == user.id)
         .where(Booking.status == "CONFIRMED")
         .where(Booking.date >= today)

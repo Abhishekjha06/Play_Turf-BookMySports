@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useMemo, useCallback } from "react";
+import React, { useState, useEffect, useRef, useMemo, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { MobileShell } from "@/layout/MobileShell";
 import { BackButton } from "@/layout/BackButton";
@@ -9,6 +9,7 @@ import { Badge } from "@/ui/badge";
 import { Progress } from "@/ui/progress";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
+import { debounce } from "lodash-es";
 import {
     format,
     isSameDay,
@@ -237,9 +238,9 @@ const ClientDashboard = () => {
         navigate("/more");
     };
 
-    const handleNavigate = (path: string) => {
+    const handleNavigate = useCallback((path: string) => {
         navigate(path);
-    };
+    }, [navigate]);
 
     // Check if client is logged in and connect to WebSocket (only in real backend mode)
     useEffect(() => {
@@ -278,38 +279,44 @@ const ClientDashboard = () => {
             setWsConnected(false);
         });
 
+        // Debounced loading indicator to batch rapid WS updates
+        const debouncedLoadingFlash = debounce(() => {
+            setLoading(true);
+            setTimeout(() => setLoading(false), 1000);
+        }, 300);
+
         const unsubscribeBookingUpdated = ws.on("booking_updated", (data) => {
-            setRealTimeUpdates(prev => [...prev.slice(-4), {
-                type: "booking",
-                message: `Booking updated: ${data.booking?.customer_name || "Unknown"}`,
-                timestamp: new Date().toLocaleTimeString(),
-                data
-            }]);
+            React.startTransition(() => {
+                setRealTimeUpdates(prev => [...prev.slice(-4), {
+                    type: "booking",
+                    message: `Booking updated: ${data.booking?.customer_name || "Unknown"}`,
+                    timestamp: new Date().toLocaleTimeString(),
+                    data
+                }]);
+            });
 
             toast.info("New booking update received", {
                 description: `Booking status: ${data.booking?.status || "updated"}`
             });
 
-            // Refresh dashboard data
-            setLoading(true);
-            setTimeout(() => setLoading(false), 1000);
+            debouncedLoadingFlash();
         });
 
         const unsubscribeSlotUpdated = ws.on("slot_updated", (data) => {
-            setRealTimeUpdates(prev => [...prev.slice(-4), {
-                type: "slot",
-                message: `Slot ${data.slot?.status || "updated"}: ${data.slot?.time || "Unknown time"}`,
-                timestamp: new Date().toLocaleTimeString(),
-                data
-            }]);
+            React.startTransition(() => {
+                setRealTimeUpdates(prev => [...prev.slice(-4), {
+                    type: "slot",
+                    message: `Slot ${data.slot?.status || "updated"}: ${data.slot?.time || "Unknown time"}`,
+                    timestamp: new Date().toLocaleTimeString(),
+                    data
+                }]);
+            });
 
             toast.info("Slot availability changed", {
                 description: `Slot ${data.slot?.time} is now ${data.slot?.status}`
             });
 
-            // Refresh dashboard data
-            setLoading(true);
-            setTimeout(() => setLoading(false), 1000);
+            debouncedLoadingFlash();
         });
 
         // Cleanup on unmount

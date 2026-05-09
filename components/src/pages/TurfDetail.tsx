@@ -71,7 +71,7 @@ const TurfDetail = () => {
   return (
     <MobileShell>
       <div className="relative h-72">
-        <img src={turf.image} alt={turf.name} className="absolute inset-0 h-full w-full object-cover" />
+        <img src={turf.image} alt={turf.name} loading="lazy" decoding="async" className="absolute inset-0 h-full w-full object-cover" />
         <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-transparent to-background" />
         <div className="absolute top-4 left-4 right-4 flex items-center justify-between">
           <BackButton />
@@ -133,7 +133,7 @@ const TurfDetail = () => {
             <h3 className="font-semibold text-sm">Gallery</h3>
             <div className="flex gap-2 mt-2 overflow-x-auto no-scrollbar">
               {turf.gallery.map((g, i) => (
-                <img key={i} src={g} alt="gallery" loading="lazy" className="h-24 w-32 rounded-xl object-cover" />
+                <img key={i} src={g} alt="gallery" loading="lazy" decoding="async" className="h-24 w-32 rounded-xl object-cover" />
               ))}
             </div>
           </section>

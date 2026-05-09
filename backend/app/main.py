@@ -2,8 +2,12 @@ from uuid import uuid4
 
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.responses import JSONResponse
 from sqlalchemy import select
+from fastapi_cache import FastAPICache
+from fastapi_cache.backends.redis import RedisBackend
+from redis import asyncio as aioredis
 
 from app.core.config import get_settings
 from app.core.logging import setup_logging
@@ -30,9 +34,14 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+app.add_middleware(GZipMiddleware, minimum_size=1000)
 
 @app.on_event("startup")
-def startup() -> None:
+async def startup() -> None:
+    # Initialize Redis cache for fastapi-cache2
+    redis = aioredis.from_url(settings.redis_url, encoding="utf8", decode_responses=True)
+    FastAPICache.init(RedisBackend(redis), prefix="playturf-cache")
+
     Base.metadata.create_all(bind=engine)
     db = SessionLocal()
     try:

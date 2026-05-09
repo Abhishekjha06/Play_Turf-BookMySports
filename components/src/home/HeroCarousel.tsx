@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { Link } from "react-router-dom";
 import type { Banner } from "@/data/seed";
@@ -7,11 +7,20 @@ import { ArrowRight } from "lucide-react";
 
 export function HeroCarousel({ banners }: { banners: Banner[] }) {
   const [i, setI] = useState(0);
+  const [paused, setPaused] = useState(false);
+
+  // Pause auto-rotation when tab is hidden (Page Visibility API)
   useEffect(() => {
-    if (!banners.length) return;
+    const onVisibilityChange = () => setPaused(document.hidden);
+    document.addEventListener("visibilitychange", onVisibilityChange);
+    return () => document.removeEventListener("visibilitychange", onVisibilityChange);
+  }, []);
+
+  useEffect(() => {
+    if (!banners.length || paused) return;
     const t = setInterval(() => setI((p) => (p + 1) % banners.length), 4500);
     return () => clearInterval(t);
-  }, [banners.length]);
+  }, [banners.length, paused]);
 
   if (!banners.length) return null;
   const b = banners[i];
@@ -29,7 +38,7 @@ export function HeroCarousel({ banners }: { banners: Banner[] }) {
             transition={{ duration: 0.6 }}
             className="absolute inset-0"
           >
-            <img src={b.image} alt={b.title} className="absolute inset-0 h-full w-full object-cover" />
+            <img src={b.image} alt={b.title} loading="lazy" decoding="async" className="absolute inset-0 h-full w-full object-cover" />
             <div className="absolute inset-0 bg-gradient-overlay" />
             <div className="absolute inset-0 p-5 flex flex-col justify-between">
               <span className="self-start inline-flex items-center px-3 py-1 rounded-full bg-primary/15 border border-primary/40 text-primary text-[11px] font-semibold tracking-wider">

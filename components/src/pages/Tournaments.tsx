@@ -27,7 +27,7 @@ const Tournaments = () => {
             data-testid={`tournament-${t.id}`}
           >
             <div className="relative h-36">
-              <img src={t.image} alt={t.name} loading="lazy" className="absolute inset-0 h-full w-full object-cover" />
+              <img src={t.image} alt={t.name} loading="lazy" decoding="async" className="absolute inset-0 h-full w-full object-cover" />
               <div className="absolute inset-0 bg-gradient-overlay" />
               <span className="absolute top-3 left-3 inline-flex items-center gap-1 px-2 py-1 rounded-full bg-primary text-primary-foreground text-[11px] font-bold">
                 <Trophy className="h-3 w-3" /> {t.prize_pool}

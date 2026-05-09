@@ -11,7 +11,7 @@ export function CompactTurfCard({ turf, userLocation }: { turf: Turf; userLocati
       data-testid={`compact-turf-${turf.id}`}
     >
       <div className="relative aspect-[4/3]">
-        <img src={turf.image} alt={turf.name} loading="lazy" className="absolute inset-0 h-full w-full object-cover" />
+        <img src={turf.image} alt={turf.name} loading="lazy" decoding="async" className="absolute inset-0 h-full w-full object-cover" />
       </div>
       <div className="p-2.5">
         <h4 className="text-xs font-semibold line-clamp-1">{turf.name}</h4>

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState, useCallback } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { motion } from "framer-motion";
 import { MobileShell } from "@/layout/MobileShell";
@@ -9,7 +9,7 @@ import { LocationFilter } from "@/home/LocationFilter";
 import { HeroCarousel } from "@/home/HeroCarousel";
 import { CategoryPills } from "@/home/CategoryPills";
 import { SectionHeader } from "@/home/SectionHeader";
-import { TurfCard } from "@/turf/TurfCard";
+import TurfCard from "@/turf/TurfCard";
 import { CompactTurfCard } from "@/turf/CompactTurfCard";
 import { OfferCard } from "@/offers/OfferCard";
 import { BookingRow } from "@/booking/BookingRow";
@@ -75,25 +75,30 @@ const Home = () => {
     ]);
   }, []);
 
+  // ── Memoized filter options ────────────────────────────────────────
+  const filterOpts = useMemo(() => ({
+    q,
+    city: selectedCity,
+    area: selectedArea,
+    sport: selectedSport,
+    amenity: selectedAmenity,
+    maxPrice: maxPrice ? Number(maxPrice) : undefined,
+    minRating: minRating ? Number(minRating) : undefined,
+    openNow,
+    userLocation: userLocation || undefined,
+  }), [q, selectedCity, selectedArea, selectedSport, selectedAmenity, maxPrice, minRating, openNow, userLocation]);
+
+  const hasActiveFilter = !!(q || selectedCity || selectedArea || selectedSport || selectedAmenity || maxPrice || minRating || openNow);
+
   // ── Search / filter logic ─────────────────────────────────────────
   useEffect(() => {
-    const opts = {
-      q,
-      city: selectedCity,
-      area: selectedArea,
-      sport: selectedSport,
-      amenity: selectedAmenity,
-      maxPrice: maxPrice ? Number(maxPrice) : undefined,
-      minRating: minRating ? Number(minRating) : undefined,
-      openNow,
-      userLocation: userLocation || undefined,
-    };
-    if (q || selectedCity || selectedArea || selectedSport || selectedAmenity || maxPrice || minRating || openNow)
-      api.listTurfs(opts).then(setResults);
+    if (hasActiveFilter)
+      api.listTurfs(filterOpts).then(setResults);
     else if (nearby)
       api.listTurfs({ nearby: true, userLocation: userLocation || undefined }).then(setResults);
     else setResults(null);
-  }, [q, nearby, selectedCity, selectedArea, selectedSport, selectedAmenity, maxPrice, minRating, openNow, userLocation]);
+  }, [hasActiveFilter, nearby, filterOpts, userLocation]);
+
 
   useEffect(() => {
     if (!nearby || selectedCity || !navigator.geolocation || allTurfs.length === 0) return;
@@ -117,15 +122,15 @@ const Home = () => {
     );
   }, [nearby, selectedCity, allTurfs]);
 
-  const setParam = (key: string, value: string | boolean) => {
+  const setParam = useCallback((key: string, value: string | boolean) => {
     const next = new URLSearchParams(params);
     next.delete("nearby");
     if (value === "" || value === false) next.delete(key);
     else next.set(key, value === true ? "1" : String(value));
     navigate(`/?${next.toString()}`);
-  };
+  }, [params, navigate]);
 
-  const updateLocation = (city: string, area = selectedArea) => {
+  const updateLocation = useCallback((city: string, area = selectedArea) => {
     const next = new URLSearchParams(params);
     next.delete("q");
     next.delete("nearby");
@@ -134,16 +139,16 @@ const Home = () => {
     if (area) next.set("area", area);
     else next.delete("area");
     navigate(`/?${next.toString()}`);
-  };
+  }, [params, navigate, selectedArea]);
 
-  const requestNearMe = () => {
+  const requestNearMe = useCallback(() => {
     const next = new URLSearchParams(params);
     next.set("nearby", "1");
     next.delete("city");
     next.delete("area");
     next.delete("q");
     navigate(`/?${next.toString()}`);
-  };
+  }, [params, navigate]);
 
   return (
     <MobileShell>

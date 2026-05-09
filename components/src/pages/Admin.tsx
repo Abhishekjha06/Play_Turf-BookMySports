@@ -206,7 +206,7 @@ const Admin = () => {
             {bookings.length === 0 && <p className="py-10 text-center text-sm text-muted2">No bookings yet.</p>}
             {bookings.map((b) => (
               <div key={b.id} className="card-panel flex items-center gap-3 rounded-2xl p-3">
-                <img src={b.turf_image} alt="" className="h-12 w-12 rounded-xl object-cover" />
+                <img src={b.turf_image} alt="" loading="lazy" decoding="async" className="h-12 w-12 rounded-xl object-cover" />
                 <div className="min-w-0 flex-1">
                   <p className="line-clamp-1 text-sm font-semibold">{b.turf_name}</p>
                   <p className="text-[11px] text-muted2">{b.date} · {b.start_time} · {b.status}</p>
@@ -322,7 +322,7 @@ function TurfEditor({ turf, onDone }: { turf: Turf; onDone: () => void }) {
   return (
     <div className="card-panel space-y-3 rounded-3xl p-4">
       <div className="flex items-center gap-3">
-        <img src={image} alt="" className="h-16 w-16 rounded-2xl object-cover" />
+        <img src={image} alt="" loading="lazy" decoding="async" className="h-16 w-16 rounded-2xl object-cover" />
         <div className="min-w-0 flex-1">
           <p className="font-semibold">Edit Turf</p>
           <p className="text-xs text-muted2">Only admin can change these values.</p>
@@ -428,7 +428,7 @@ function AdminButton({ label, icon: Icon, onClick }: { label: string; icon: type
 function Row({ img, title, sub, onEdit, onDelete }: { img: string; title: string; sub: string; onEdit: () => void; onDelete: () => void }) {
   return (
     <div className="card-panel flex items-center gap-3 rounded-2xl p-3">
-      <img src={img} alt="" className="h-12 w-12 rounded-xl object-cover" />
+      <img src={img} alt="" loading="lazy" decoding="async" className="h-12 w-12 rounded-xl object-cover" />
       <button onClick={onEdit} className="min-w-0 flex-1 text-left">
         <p className="line-clamp-1 text-sm font-semibold">{title}</p>
         <p className="line-clamp-1 text-[11px] text-muted2">{sub}</p>
@@ -467,7 +467,7 @@ function SimpleList({ items, kind, refresh }: { items: Array<Banner | Offer | To
       </button>
       {items.map((item) => (
         <div key={item.id} className="card-panel flex items-center gap-3 rounded-2xl p-3">
-          <img src={item.image} alt="" className="h-12 w-12 rounded-xl object-cover" />
+          <img src={item.image} alt="" loading="lazy" decoding="async" className="h-12 w-12 rounded-xl object-cover" />
           <div className="min-w-0 flex-1">
             <p className="line-clamp-1 text-sm font-semibold">{"title" in item ? item.title : item.name}</p>
             <p className="line-clamp-1 text-[11px] text-muted2">{"subtitle" in item ? item.subtitle : item.date}</p>

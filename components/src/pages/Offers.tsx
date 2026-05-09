@@ -22,7 +22,7 @@ const Offers = () => {
             transition={{ delay: i * 0.05 }}
             className="relative h-40 rounded-3xl overflow-hidden card-panel"
           >
-            <img src={o.image} alt={o.title} loading="lazy" className="absolute inset-0 h-full w-full object-cover" />
+            <img src={o.image} alt={o.title} loading="lazy" decoding="async" className="absolute inset-0 h-full w-full object-cover" />
             <div className="absolute inset-0 bg-gradient-overlay" />
             <div className="absolute inset-0 p-4 flex flex-col justify-between">
               <span className="self-start inline-flex items-center px-3 py-1 rounded-full bg-primary text-primary-foreground text-xs font-bold">

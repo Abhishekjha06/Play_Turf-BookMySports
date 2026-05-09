@@ -1,4 +1,4 @@
-import { lazy, Suspense } from "react";
+import React, { lazy, Suspense, Profiler } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Route, Routes } from "react-router-dom";
 import { Toaster as Sonner } from "@/ui/sonner";
@@ -6,6 +6,7 @@ import { TooltipProvider } from "@/ui/tooltip";
 import { AuthCallback } from "@/AuthCallback";
 import { AdminRoute } from "@/components/AdminRoute";
 import { ClientRoute } from "@/components/ClientRoute";
+import { DashboardErrorBoundary } from "@/components/DashboardErrorBoundary";
 
 const Home = lazy(() => import("@/pages/Home"));
 const TurfDetail = lazy(() => import("@/pages/TurfDetail"));
@@ -59,7 +60,22 @@ const App = () => (
                 path="/client/dashboard"
                 element={
                   <ClientRoute>
-                    <ClientDashboard />
+                    <DashboardErrorBoundary>
+                      {import.meta.env.DEV ? (
+                        <Profiler
+                          id="ClientDashboard"
+                          onRender={(id, phase, actualDuration) => {
+                            console.log(
+                              `[Profiler] ${id} ${phase} took ${actualDuration.toFixed(2)}ms`
+                            );
+                          }}
+                        >
+                          <ClientDashboard />
+                        </Profiler>
+                      ) : (
+                        <ClientDashboard />
+                      )}
+                    </DashboardErrorBoundary>
                   </ClientRoute>
                 }
               />

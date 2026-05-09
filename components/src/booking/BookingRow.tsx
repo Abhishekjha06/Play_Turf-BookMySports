@@ -16,7 +16,7 @@ export function BookingRow({ booking }: { booking: Booking }) {
       className="flex items-center gap-3 card-panel rounded-2xl p-3 pressable"
       data-testid={`booking-row-${booking.id}`}
     >
-      <img src={booking.turf_image} alt={booking.turf_name} className="h-14 w-14 rounded-xl object-cover" />
+      <img src={booking.turf_image} alt={booking.turf_name} loading="lazy" decoding="async" className="h-14 w-14 rounded-xl object-cover" />
       <div className="flex-1 min-w-0">
         <p className="font-semibold text-sm line-clamp-1">{booking.turf_name}</p>
         <div className="flex items-center gap-3 text-[11px] text-muted2 mt-0.5">

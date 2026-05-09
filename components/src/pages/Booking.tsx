@@ -314,7 +314,7 @@ const BookingContent = () => {
 
             <div className="card-panel mt-4 space-y-3 rounded-3xl p-4">
               <div className="flex items-center gap-3">
-                <img src={turf.image} alt={turf.name} className="h-16 w-16 rounded-xl object-cover" />
+                <img src={turf.image} alt={turf.name} loading="lazy" decoding="async" className="h-16 w-16 rounded-xl object-cover" />
                 <div>
                   <p className="font-semibold">{turf.name}</p>
                   <p className="text-xs text-muted2">{turf.city}</p>
