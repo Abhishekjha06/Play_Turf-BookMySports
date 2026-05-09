@@ -60,11 +60,11 @@ const ClientBookingManagement = () => {
     const getStatusBadge = (status: string) => {
         switch (status) {
             case "confirmed":
-                return <Badge className="bg-green-900/30 text-green-400">Confirmed</Badge>;
+                return <Badge style={{ backgroundColor: "#0d2e1a", color: "#4ade80" }}>Confirmed</Badge>;
             case "pending":
-                return <Badge className="bg-yellow-900/30 text-yellow-400">Pending</Badge>;
+                return <Badge style={{ backgroundColor: "#2d1e00", color: "#f5b942" }}>Pending</Badge>;
             case "cancelled":
-                return <Badge className="bg-red-900/30 text-red-400">Cancelled</Badge>;
+                return <Badge style={{ backgroundColor: "#3d1a1a", color: "#f87171" }}>Cancelled</Badge>;
             default:
                 return <Badge variant="outline">Unknown</Badge>;
         }
@@ -73,11 +73,11 @@ const ClientBookingManagement = () => {
     const getPaymentBadge = (payment: string) => {
         switch (payment) {
             case "paid":
-                return <Badge className="bg-blue-900/30 text-blue-400">Paid</Badge>;
+                return <Badge style={{ backgroundColor: "#0d2e1a", color: "#4ade80" }}>Paid</Badge>;
             case "pending":
-                return <Badge className="bg-amber-900/30 text-amber-400">Pending</Badge>;
+                return <Badge style={{ backgroundColor: "#2d1e00", color: "#f5b942" }}>Pending</Badge>;
             case "refunded":
-                return <Badge className="bg-purple-900/30 text-purple-400">Refunded</Badge>;
+                return <Badge style={{ backgroundColor: "#1e1040", color: "#b39dfa" }}>Refunded</Badge>;
             default:
                 return <Badge variant="outline">Unknown</Badge>;
         }

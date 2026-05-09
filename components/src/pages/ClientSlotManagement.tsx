@@ -66,9 +66,9 @@ const ClientSlotManagement = () => {
 
     const getStatusColor = (status: string) => {
         switch (status) {
-            case "available": return "bg-green-500";
-            case "booked": return "bg-blue-500";
-            case "blocked": return "bg-red-500";
+            case "available": return "bg-[#3fd6a8]";
+            case "booked": return "bg-[#7fb8f5]";
+            case "blocked": return "bg-[#f5886a]";
             default: return "bg-gray-500";
         }
     };
@@ -206,12 +206,12 @@ const ClientSlotManagement = () => {
                                                 <div className="flex items-center justify-between">
                                                     <span className="text-gray-400">Status</span>
                                                     <Badge
-                                                        className={
+                                                        style={
                                                             slot.status === "available"
-                                                                ? "bg-green-900/30 text-green-400"
+                                                                ? { backgroundColor: "#062920", color: "#3fd6a8" }
                                                                 : slot.status === "booked"
-                                                                    ? "bg-blue-900/30 text-blue-400"
-                                                                    : "bg-gray-900/30 text-gray-400"
+                                                                    ? { backgroundColor: "#0d2a4a", color: "#7fb8f5" }
+                                                                    : { backgroundColor: "#2d1008", color: "#f5886a" }
                                                         }
                                                     >
                                                         {slot.status.toUpperCase()}

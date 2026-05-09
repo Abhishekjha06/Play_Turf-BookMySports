@@ -53,7 +53,7 @@ function NavItem({
       data-testid={testid}
       className={cn(
         "flex flex-col items-center justify-center gap-0.5 h-12 w-16 rounded-2xl pressable",
-        active ? "text-primary" : "text-muted2"
+        active ? "text-[#7fb8f5]" : "text-muted2"
       )}
     >
       <Icon className="h-5 w-5" />

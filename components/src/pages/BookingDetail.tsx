@@ -22,9 +22,9 @@ import { api } from "@/lib/api";
 import { MobileShell } from "@/layout/MobileShell";
 
 const statusConfig: Record<string, { icon: typeof CheckCircle2; color: string; bg: string; label: string }> = {
-    CONFIRMED: { icon: CheckCircle2, color: "text-primary", bg: "bg-primary/15 border-primary/40", label: "Confirmed" },
-    PENDING: { icon: AlertCircle, color: "text-warning", bg: "bg-warning/15 border-warning/40", label: "Pending Payment" },
-    CANCELLED: { icon: XCircle, color: "text-destructive", bg: "bg-destructive/15 border-destructive/40", label: "Cancelled" },
+    CONFIRMED: { icon: CheckCircle2, color: "text-[#4ade80]", bg: "bg-[#0d2e1a] border-[#0d2e1a]", label: "Confirmed" },
+    PENDING: { icon: AlertCircle, color: "text-[#f5b942]", bg: "bg-[#2d1e00] border-[#2d1e00]", label: "Pending Payment" },
+    CANCELLED: { icon: XCircle, color: "text-[#f87171]", bg: "bg-[#3d1a1a] border-[#3d1a1a]", label: "Cancelled" },
     COMPLETED: { icon: CheckCircle2, color: "text-soft", bg: "bg-white/10 border-white/15", label: "Completed" },
 };
 
