@@ -367,7 +367,7 @@ const ClientDashboard = () => {
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ duration: 0.5 }}
-                        className="grid grid-cols-2 md:grid-cols-4 gap-4"
+                        className="grid grid-cols-2 md:grid-cols-4 gap-4 px-4 md:px-8 lg:px-10 ml-3 md:ml-6"
                     >
                         {summaryCards.map((card, idx) => {
                             const Icon = card.icon;
@@ -376,22 +376,28 @@ const ClientDashboard = () => {
                             const DeltaIcon = isPositive ? TrendingUp : isNegative ? TrendingDown : Minus;
                             const deltaColor = isPositive ? "#4ade80" : isNegative ? "#f87171" : "#888888";
                             return (
-                                <div
+                                <motion.div
                                     key={idx}
-                                    className="relative overflow-hidden"
-                                    style={{ backgroundColor: card.bg, borderRadius: "14px", padding: "12px 14px" }}
+                                    className="relative overflow-hidden rounded-2xl p-4 transition-all duration-300 hover:scale-105 hover:shadow-2xl"
+                                    style={{
+                                        backgroundColor: card.bg,
+                                        boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -1px rgba(0, 0, 0, 0.15)"
+                                    }}
+                                    whileHover={{
+                                        boxShadow: `0 20px 25px -5px ${card.labelColor}20, 0 10px 10px -5px ${card.labelColor}10`
+                                    }}
                                 >
                                     <Icon
-                                        className="absolute right-2.5 top-2.5"
-                                        style={{ width: "22px", height: "22px", color: card.labelColor, opacity: 0.25 }}
+                                        className="absolute right-3 top-3 transition-transform duration-300 hover:scale-110"
+                                        style={{ width: "24px", height: "24px", color: card.labelColor, opacity: 0.3 }}
                                     />
-                                    <p className="text-sm" style={{ color: card.labelColor }}>{card.title}</p>
-                                    <p className="text-2xl font-bold mt-1" style={{ color: card.valueColor }}>{card.value}</p>
-                                    <div className="flex items-center gap-1 mt-1">
-                                        <DeltaIcon className="h-3 w-3" style={{ color: deltaColor }} />
-                                        <span className="text-xs" style={{ color: deltaColor }}>{card.change}</span>
+                                    <p className="text-sm font-medium tracking-wide" style={{ color: card.labelColor }}>{card.title}</p>
+                                    <p className="text-2xl font-bold mt-2 tracking-tight" style={{ color: card.valueColor }}>{card.value}</p>
+                                    <div className="flex items-center gap-1.5 mt-2">
+                                        <DeltaIcon className="h-3.5 w-3.5" style={{ color: deltaColor }} />
+                                        <span className="text-xs font-semibold" style={{ color: deltaColor }}>{card.change}</span>
                                     </div>
-                                </div>
+                                </motion.div>
                             );
                         })}
                     </motion.div>
@@ -644,39 +650,48 @@ const ClientDashboard = () => {
                                 </Card>
 
                                 {/* Real-time Updates */}
-                                <Card className="bg-gray-800 border-gray-700">
-                                    <CardHeader className="pb-3">
+                                <Card className="bg-gray-800/80 border-gray-700/50 backdrop-blur-sm px-4 md:px-8 lg:px-10 ml-3 md:ml-6 transition-all duration-300 hover:shadow-2xl hover:shadow-purple-500/10">
+                                    <CardHeader className="pb-4">
                                         <div className="flex items-center justify-between">
-                                            <CardTitle>Real-time Updates</CardTitle>
-                                            <div
-                                                className="flex items-center gap-1 px-2 py-1 rounded-full text-xs"
-                                                style={wsConnected ? { backgroundColor: "#0d2e1a", color: "#4ade80" } : { backgroundColor: "#3d1a1a", color: "#f87171" }}
+                                            <CardTitle className="text-lg font-bold tracking-tight">Real-time Updates</CardTitle>
+                                            <motion.div
+                                                className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold transition-all duration-300"
+                                                style={wsConnected ? { backgroundColor: "#0d2e1a", color: "#4ade80", boxShadow: "0 0 12px rgba(74, 222, 128, 0.3)" } : { backgroundColor: "#3d1a1a", color: "#f87171" }}
+                                                animate={wsConnected ? { scale: [1, 1.05, 1] } : {}}
+                                                transition={{ duration: 2, repeat: Infinity }}
                                             >
-                                                {wsConnected ? <Wifi className="h-3 w-3" /> : <WifiOff className="h-3 w-3" />}
+                                                {wsConnected ? <Wifi className="h-3.5 w-3.5" /> : <WifiOff className="h-3.5 w-3.5" />}
                                                 <span>{wsConnected ? 'Live Connected' : 'Offline'}</span>
-                                            </div>
+                                            </motion.div>
                                         </div>
-                                        <CardDescription>Instant updates from main panel</CardDescription>
+                                        <CardDescription className="text-sm">Instant updates from main panel</CardDescription>
                                     </CardHeader>
                                     <CardContent>
-                                        <div className="space-y-2 max-h-48 overflow-y-auto">
+                                        <div className="space-y-3 max-h-52 overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-gray-800">
                                             {realTimeUpdates.length > 0 ? (
                                                 realTimeUpdates.map((update, index) => (
-                                                    <div key={index} className="flex items-start gap-2 p-2 bg-gray-900/30 rounded">
-                                                        <div className={`mt-1 h-2 w-2 rounded-full ${update.type === 'booking' ? 'bg-blue-500' : 'bg-amber-500'}`} />
-                                                        <div className="flex-1">
-                                                            <p className="text-sm font-medium">{update.message}</p>
-                                                            <p className="text-xs text-gray-400">{update.timestamp}</p>
+                                                    <motion.div
+                                                        key={index}
+                                                        initial={{ opacity: 0, x: -10 }}
+                                                        animate={{ opacity: 1, x: 0 }}
+                                                        transition={{ duration: 0.3, delay: index * 0.05 }}
+                                                        className="flex items-start gap-3 p-3 bg-gray-900/40 rounded-xl border border-white/5 hover:bg-gray-900/60 hover:border-white/10 transition-all duration-200"
+                                                    >
+                                                        <div className={`mt-1.5 h-2.5 w-2.5 rounded-full ${update.type === 'booking' ? 'bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.5)]' : 'bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.5)]'}`} />
+                                                        <div className="flex-1 min-w-0">
+                                                            <p className="text-sm font-medium text-gray-100 truncate">{update.message}</p>
+                                                            <p className="text-xs text-gray-400 mt-0.5">{update.timestamp}</p>
                                                         </div>
-                                                    </div>
+                                                    </motion.div>
                                                 ))
                                             ) : (
-                                                <div className="text-center py-4 text-gray-500 text-sm">
+                                                <div className="text-center py-6 text-gray-500 text-sm">
                                                     {wsConnected ? 'Waiting for updates...' : 'Connect to receive live updates'}
                                                 </div>
                                             )}
                                         </div>
-                                        <div className="mt-4 text-xs text-gray-400">
+                                        <div className="mt-4 pt-3 border-t border-white/5 text-xs text-gray-400 flex items-center gap-2">
+                                            <div className="h-1.5 w-1.5 rounded-full bg-purple-500 animate-pulse" />
                                             Updates appear here when bookings or slots change in real-time
                                         </div>
                                     </CardContent>
