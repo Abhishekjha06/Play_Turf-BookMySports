@@ -1,5 +1,5 @@
 import { createRoot } from "react-dom/client";
-import App from "./App.tsx";
+import AppWrapper from "./src/components/AppWrapper";
 import "./index.css";
 
 // MON-1: Core Web Vitals tracking
@@ -16,4 +16,4 @@ onCLS(sendToAnalytics);
 onINP(sendToAnalytics);
 onLCP(sendToAnalytics);
 
-createRoot(document.getElementById("root")!).render(<App />);
+createRoot(document.getElementById("root")!).render(<AppWrapper />);
