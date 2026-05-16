@@ -147,6 +147,23 @@
   100% { transform: translateY(110vh) rotate(720deg); opacity: 0; }
 }
 
-.animate-confetti {
+  .animate-confetti {
   animation: confetti 3.2s ease-in infinite;
+}
+
+/* 3D Transform Utilities */
+.preserve-3d {
+  transform-style: preserve-3d;
+}
+.backface-hidden {
+  backface-visibility: hidden;
+}
+.perspective-1000 {
+  perspective: 1000px;
+}
+
+/* Gold Neon Text */
+.neon-text-gold {
+  color: #f2ca50;
+  text-shadow: 0 0 15px rgba(242, 202, 80, 0.6), 0 0 30px rgba(242, 202, 80, 0.3);
 }
