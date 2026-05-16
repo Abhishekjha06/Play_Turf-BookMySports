@@ -1,8 +1,8 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { CalendarCheck, MapPin, Tag, Trophy, MoreHorizontal } from "lucide-react";
+import { CalendarCheck, MapPin, Tag, Trophy, MoreHorizontal, Coins } from "lucide-react";
 import { TossModal } from "./TossModal";
-import headsImg from "@/assets/heads.png";
+
 
 const cats = [
   { label: "My Bookings", icon: CalendarCheck, to: "/bookings" },
@@ -24,7 +24,9 @@ export function CategoryPills() {
           className="shrink-0 flex flex-col items-center w-16 pressable bg-transparent border-none outline-none cursor-pointer"
         >
           <div className="h-14 w-14 rounded-full grid place-items-center bg-panel-2 border border-primary/40 shadow-[0_0_18px_rgba(198,248,6,0.18)]">
-            <img src={headsImg} alt="Toss" className="h-7 w-7 object-contain drop-shadow-[0_0_8px_rgba(242,202,80,0.3)]" />
+            <div className="h-10 w-10 rounded-full border-2 border-primary/50 flex items-center justify-center bg-primary/5 shadow-[0_0_12px_rgba(198,248,6,0.3)]">
+              <span className="text-[10px] font-black tracking-tighter text-primary leading-none">TOSS</span>
+            </div>
           </div>
           <span className="mt-1 text-[11px] text-soft text-center leading-tight">Toss Time</span>
         </button>
